@@ -1,0 +1,6 @@
+{
+  "name": "Nexora Trade",
+  "description": "Nexora Trade - Trade Smarter. Grow With Confidence. Premium financial trading broker platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
