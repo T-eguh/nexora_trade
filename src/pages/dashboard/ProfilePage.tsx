@@ -55,7 +55,7 @@ export const ProfilePage: React.FC = () => {
                 {user?.role.toUpperCase()}
               </Badge>
               <Badge variant="success" size="sm">
-                VERIFIED (DEMO)
+                LIVE TERVERIFIKASI
               </Badge>
             </div>
           </Card>

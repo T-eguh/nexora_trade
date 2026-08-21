@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
-import { Card } from '../../components/Card';
-import { Badge } from '../../components/Badge';
-import { Button } from '../../components/Button';
-import { Input } from '../../components/Input';
-import { Select } from '../../components/Select';
+import { useNavigate } from 'react-router-dom';
 import { useAccounts, useAuth } from '../../hooks/useStorage';
 import { StorageService } from '../../utils/storage';
+import { INDONESIA_PAYMENT_METHODS } from '../../data/payments';
 import {
   ArrowUpCircle,
-  Building2,
-  Bitcoin,
-  CreditCard,
   CheckCircle2,
   AlertCircle,
+  ShieldCheck,
   Zap,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export const WithdrawalPage: React.FC = () => {
   const { accounts } = useAccounts();
@@ -24,201 +18,202 @@ export const WithdrawalPage: React.FC = () => {
 
   const primaryAccount = accounts.find((a) => a.userId === user?.id) || accounts[0];
 
-  const [accountId, setAccountId] = useState(primaryAccount?.id || '');
-  const [method, setMethod] = useState<'crypto' | 'bank' | 'card'>('crypto');
-  const [amount, setAmount] = useState('1000');
-  const [destination, setDestination] = useState('0x71C...8942');
+  const [selectedMethodId, setSelectedMethodId] = useState(INDONESIA_PAYMENT_METHODS[0].id);
+  const [amountUsd, setAmountUsd] = useState('50');
+  const [destAccount, setDestAccount] = useState('0812-9842-1109 (Atas Nama Saya)');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const selectedAcc = accounts.find((a) => a.id === accountId) || primaryAccount;
+  const selectedMethod = INDONESIA_PAYMENT_METHODS.find((m) => m.id === selectedMethodId) || INDONESIA_PAYMENT_METHODS[0];
 
   const handleWithdraw = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const withAmount = parseFloat(amount) || 0;
-
-    if (!selectedAcc) return;
+    const withAmount = parseFloat(amountUsd) || 0;
 
     if (withAmount <= 0) {
-      setError('Please enter a valid withdrawal amount greater than zero.');
+      setError('Harap masukkan nominal penarikan yang valid.');
       return;
     }
 
-    if (withAmount > selectedAcc.balance) {
-      setError(`Insufficient demo funds. Available balance: $${selectedAcc.balance.toLocaleString()}`);
+    if (withAmount > primaryAccount.balance) {
+      setError(`Saldo tidak mencukupi. Saldo tersedia: $${primaryAccount.balance.toLocaleString('id-ID', { minimumFractionDigits: 2 })}`);
       return;
     }
 
     setLoading(true);
 
     setTimeout(() => {
-      StorageService.withdraw(selectedAcc.id, withAmount, `Simulated ${method.toUpperCase()} to ${destination}`);
+      StorageService.withdraw(
+        primaryAccount.id,
+        withAmount,
+        `Penarikan ke ${selectedMethod.name} (${destAccount})`
+      );
       setLoading(false);
-      setSuccessMsg(`Simulated withdrawal request of $${withAmount.toLocaleString()} submitted successfully for account ${selectedAcc.accountNumber}!`);
+      setSuccessMsg(
+        `Permintaan penarikan sebesar $${withAmount.toLocaleString('id-ID')} USD via ${selectedMethod.name} berhasil diajukan!`
+      );
     }, 600);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6 font-sans">
       {/* Header */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <Badge variant="red" size="sm">
-            DEMO SIMULATION
-          </Badge>
-          <span className="text-xs text-neutral-400">Virtual Funds Deduction Test</span>
+          <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
+            PENARIKAN DANA
+          </span>
+          <span className="text-xs text-neutral-500">Pencairan Dana ke Bank / E-Wallet Lokal</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Simulated Withdrawal Request
+        <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
+          Penarikan Dana (Withdrawal)
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-400">
-          Simulate a profit withdrawal transaction and observe real-time balance deductions and transaction status changes.
+        <p className="text-xs text-neutral-500">
+          Tarik profit hasil trading Anda ke rekening bank atau e-wallet Indonesia tanpa biaya admin.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-8">
-          <Card padding="lg">
-            {successMsg ? (
-              <div className="py-10 text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400 mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8 bg-white rounded-2xl p-5 sm:p-6 border border-neutral-200 shadow-sm space-y-5">
+          {successMsg ? (
+            <div className="py-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-neutral-900">Penarikan Berhasil Diajukan</h3>
+              <p className="text-xs text-neutral-600 max-w-md mx-auto leading-relaxed">
+                {successMsg}
+              </p>
+              <div className="pt-3 flex justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessMsg(null);
+                    setAmountUsd('50');
+                  }}
+                  className="py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  Ajukan Penarikan Baru
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard/transactions')}
+                  className="py-2.5 px-5 bg-neutral-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow"
+                >
+                  Lihat Riwayat Transaksi
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  <span>{error}</span>
                 </div>
-                <h3 className="text-xl font-bold text-white">Withdrawal Submitted</h3>
-                <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
-                  {successMsg}
-                </p>
-                <div className="pt-4 flex justify-center gap-3">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setSuccessMsg(null);
-                      setAmount('500');
-                    }}
-                  >
-                    New Request
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate('/dashboard/transactions')}
-                  >
-                    View in Transactions
-                  </Button>
+              )}
+
+              {/* Source account */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-neutral-700">
+                  Akun Trading Sumber
+                </label>
+                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 flex items-center justify-between text-xs">
+                  <div>
+                    <strong className="text-neutral-900 font-mono">
+                      #{primaryAccount?.accountNumber || '205128182'}
+                    </strong>
+                    <span className="text-neutral-500 block text-[11px]">
+                      Cent news (1:1000)
+                    </span>
+                  </div>
+                  <span className="text-emerald-700 font-bold font-mono text-sm">
+                    Tersedia: ${primaryAccount?.balance.toFixed(2)} USD
+                  </span>
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleWithdraw} className="space-y-6">
-                {error && (
-                  <div className="p-3.5 bg-red-950/50 border border-red-800/80 rounded-xl text-red-300 text-xs flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                    <span>{error}</span>
-                  </div>
-                )}
 
-                <Select
-                  label="Source Trading Account"
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                  options={accounts.map((a) => ({
-                    value: a.id,
-                    label: `${a.accountNumber} (Available: $${a.balance.toLocaleString()})`,
-                  }))}
-                />
+              {/* Method selection */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-neutral-700">
+                  Saluran Penarikan
+                </label>
+                <select
+                  value={selectedMethodId}
+                  onChange={(e) => setSelectedMethodId(e.target.value)}
+                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
+                >
+                  {INDONESIA_PAYMENT_METHODS.map((pm) => (
+                    <option key={pm.id} value={pm.id}>
+                      {pm.name} — ({pm.processingTime})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Method selection */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wide">
-                    Withdrawal Channel
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setMethod('crypto')}
-                      className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-center transition-colors cursor-pointer ${
-                        method === 'crypto'
-                          ? 'bg-red-950/40 border-red-600 text-white'
-                          : 'bg-[#151518] border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800'
-                      }`}
-                    >
-                      <Bitcoin className="w-5 h-5 text-amber-400" />
-                      <span className="text-xs font-bold">USDT (TRC20)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setMethod('bank')}
-                      className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-center transition-colors cursor-pointer ${
-                        method === 'bank'
-                          ? 'bg-red-950/40 border-red-600 text-white'
-                          : 'bg-[#151518] border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800'
-                      }`}
-                    >
-                      <Building2 className="w-5 h-5 text-emerald-400" />
-                      <span className="text-xs font-bold">Bank Transfer</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setMethod('card')}
-                      className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-center transition-colors cursor-pointer ${
-                        method === 'card'
-                          ? 'bg-red-950/40 border-red-600 text-white'
-                          : 'bg-[#151518] border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800'
-                      }`}
-                    >
-                      <CreditCard className="w-5 h-5 text-blue-400" />
-                      <span className="text-xs font-bold">Card Refund</span>
-                    </button>
-                  </div>
-                </div>
-
-                <Input
-                  label="Withdrawal Amount (USD)"
+              {/* Amount */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-neutral-700">
+                  Nominal Penarikan (USD)
+                </label>
+                <input
                   type="number"
-                  min="10"
-                  max="50000"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  min="5"
+                  step="any"
                   required
-                  helperText={`Maximum available to withdraw: $${selectedAcc ? selectedAcc.balance.toLocaleString() : '0'}`}
+                  value={amountUsd}
+                  onChange={(e) => setAmountUsd(e.target.value)}
+                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
+                <span className="text-[11px] text-neutral-500 block">
+                  Estimasi IDR: Rp {(parseFloat(amountUsd || '0') * 16000).toLocaleString('id-ID')}
+                </span>
+              </div>
 
-                <Input
-                  label={method === 'crypto' ? 'Destination Wallet Address (USDT TRC20)' : method === 'bank' ? 'Bank Account IBAN / Number' : 'Card Last 4 Digits'}
-                  placeholder={method === 'crypto' ? 'e.g. TXyZ871...90AB' : 'e.g. US89 3704 0044 ...'}
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+              {/* Destination */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-neutral-700">
+                  Nomor Rekening / Akun Tujuan & Atas Nama
+                </label>
+                <input
+                  type="text"
                   required
+                  value={destAccount}
+                  onChange={(e) => setDestAccount(e.target.value)}
+                  placeholder="Contoh: 123456789 a.n Ismail"
+                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
+              </div>
 
-                <Button type="submit" fullWidth size="lg" disabled={loading}>
-                  {loading ? 'Processing Withdrawal...' : 'Request Demo Withdrawal'}
-                  <Zap className="w-4 h-4 ml-2" />
-                </Button>
-              </form>
-            )}
-          </Card>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-colors shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? 'Memproses Penarikan...' : 'Ajukan Penarikan Dana'}
+                <Zap className="w-4 h-4" />
+              </button>
+            </form>
+          )}
         </div>
 
-        {/* Security checklist */}
-        <div className="lg:col-span-4 space-y-4 text-xs">
-          <Card padding="md" className="space-y-3 bg-[#111114]">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              Withdrawal Rules
-            </h4>
-            <p className="text-neutral-400 leading-relaxed">
-              In this simulated testing environment, submitted withdrawal orders immediately deduct the account balance and record an auditable transaction log.
-            </p>
-            <div className="pt-2 border-t border-neutral-800 space-y-1.5 text-[11px] text-neutral-400">
-              <div>• Minimum Withdrawal: $10 USD</div>
-              <div>• Fee: $0.00 (Zero Demo Commission)</div>
-              <div>• Settlement Status: Automated</div>
-            </div>
-          </Card>
+        {/* Rules Card */}
+        <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm space-y-3 text-xs">
+          <div className="flex items-center gap-2 text-neutral-900 font-bold border-b border-neutral-200 pb-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Ketentuan Penarikan</span>
+          </div>
+          <p className="text-neutral-500 leading-relaxed text-[11px]">
+            Penarikan dana diproses melalui saluran keuangan terverifikasi untuk menjamin keamanan dana trading Anda.
+          </p>
+          <div className="space-y-1.5 text-[11px] text-neutral-600">
+            <div>• Minimal Penarikan: <strong>$5 USD</strong></div>
+            <div>• Biaya Penarikan: <strong>Rp 0 (Bebas Biaya)</strong></div>
+            <div>• Waktu Pemrosesan: <strong>Otomatis 1 - 15 Menit</strong></div>
+          </div>
         </div>
       </div>
     </div>

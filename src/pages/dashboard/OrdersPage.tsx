@@ -9,7 +9,7 @@ import { Select } from '../../components/Select';
 import { useOrders, useMarkets, useAccounts, useAuth } from '../../hooks/useStorage';
 import { StorageService } from '../../utils/storage';
 import { Order, OrderType } from '../../types';
-import { Plus, CheckCircle2, ListOrdered, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle2, Trash2 } from 'lucide-react';
 
 export const OrdersPage: React.FC = () => {
   const { orders } = useOrders();
@@ -19,7 +19,7 @@ export const OrdersPage: React.FC = () => {
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [symbol, setSymbol] = useState('EUR/USD');
-  const [orderType, setOrderType] = useState<OrderType>('BUY_LIMIT');
+  const [orderType, setOrderType] = useState<OrderType>('LIMIT_BUY');
   const [volume, setVolume] = useState('0.50');
   const [targetPrice, setTargetPrice] = useState('1.0820');
   const [sl, setSl] = useState('');
@@ -38,7 +38,7 @@ export const OrdersPage: React.FC = () => {
     const currPrice = currentMarket ? currentMarket.bid : 1.085;
 
     const newOrder: Omit<Order, 'id' | 'createdAt'> = {
-      accountId: primaryAccount?.accountNumber || 'NX-894102',
+      accountId: primaryAccount?.accountNumber || primaryAccount?.accountId || '205128182',
       symbol,
       type: orderType,
       volume: parseFloat(volume) || 0.1,
@@ -50,7 +50,7 @@ export const OrdersPage: React.FC = () => {
     };
 
     StorageService.addOrder(newOrder);
-    setSuccessMsg(`Pending ${orderType} on ${symbol} placed successfully!`);
+    setSuccessMsg(`Order Tertunda ${orderType} pada ${symbol} berhasil dipasang!`);
     setTimeout(() => {
       setSuccessMsg(null);
       setCreateModalOpen(false);
@@ -59,19 +59,19 @@ export const OrdersPage: React.FC = () => {
 
   const columns: Column<Order>[] = [
     {
-      header: 'Order ID',
-      render: (o) => <span className="font-bold text-white font-mono-num">#{o.id}</span>,
+      header: 'ID Order',
+      render: (o) => <span className="font-bold text-white font-mono">#{o.id}</span>,
     },
     {
-      header: 'Account',
-      render: (o) => <span className="font-mono-num text-neutral-400">{o.accountId}</span>,
+      header: 'Akun',
+      render: (o) => <span className="font-mono text-neutral-400">{o.accountId}</span>,
     },
     {
-      header: 'Symbol',
-      render: (o) => <strong className="text-white text-sm">{o.symbol}</strong>,
+      header: 'Simbol',
+      render: (o) => <strong className="text-white text-xs">{o.symbol}</strong>,
     },
     {
-      header: 'Order Type',
+      header: 'Tipe Order',
       render: (o) => (
         <Badge
           variant={o.type.includes('BUY') ? 'success' : 'danger'}
@@ -83,17 +83,21 @@ export const OrdersPage: React.FC = () => {
     },
     {
       header: 'Volume',
-      render: (o) => <span className="font-mono-num">{o.volume.toFixed(2)} Lots</span>,
+      render: (o) => <span className="font-mono">{o.volume.toFixed(2)} Lot</span>,
     },
     {
-      header: 'Target Price',
+      header: 'Harga Target',
       align: 'right',
-      render: (o) => <span className="font-mono-num font-bold text-white">{o.targetPrice.toFixed(4)}</span>,
+      render: (o) => <span className="font-mono font-bold text-white">{o.targetPrice.toFixed(4)}</span>,
     },
     {
-      header: 'Market Price',
+      header: 'Harga Pasar',
       align: 'right',
-      render: (o) => <span className="font-mono-num text-neutral-400">{o.currentPrice.toFixed(4)}</span>,
+      render: (o) => (
+        <span className="font-mono text-neutral-400">
+          {(o.currentPrice || o.targetPrice).toFixed(4)}
+        </span>
+      ),
     },
     {
       header: 'Status',
@@ -102,40 +106,40 @@ export const OrdersPage: React.FC = () => {
           variant={o.status === 'pending' ? 'warning' : o.status === 'executed' ? 'success' : 'neutral'}
           size="sm"
         >
-          {o.status.toUpperCase()}
+          {o.status === 'pending' ? 'TERTUNDA' : o.status === 'executed' ? 'DIEKSEKUSI' : 'DIBATALKAN'}
         </Badge>
       ),
     },
     {
-      header: 'Action',
+      header: 'Aksi',
       align: 'right',
       render: (o) =>
         o.status === 'pending' ? (
           <button
             onClick={() => handleCancelOrder(o.id)}
             className="p-1.5 rounded bg-red-950/40 text-red-400 hover:bg-red-900 border border-red-800/80 transition-colors cursor-pointer"
-            title="Cancel Order"
+            title="Batalkan Order"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         ) : (
-          <span className="text-[11px] text-neutral-500 font-mono-num">Completed</span>
+          <span className="text-[11px] text-neutral-500 font-mono">Selesai</span>
         ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Pending Orders</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight">Order Tertunda (Pending Orders)</h1>
           <p className="text-xs text-neutral-400">
-            Set limit and stop entry trigger orders that execute when the market reaches your target price.
+            Atur limit dan stop trigger order yang akan dieksekusi saat harga pasar menyentuh target Anda.
           </p>
         </div>
 
         <Button onClick={() => setCreateModalOpen(true)} size="md">
-          <Plus className="w-4 h-4 mr-1.5" /> Place Pending Order
+          <Plus className="w-4 h-4 mr-1.5" /> Pasang Order Tertunda
         </Button>
       </div>
 
@@ -144,7 +148,7 @@ export const OrdersPage: React.FC = () => {
           columns={columns}
           data={orders}
           keyExtractor={(o) => o.id}
-          emptyMessage="No pending orders active. Click 'Place Pending Order' to create a new entry rule."
+          emptyMessage="Belum ada order tertunda aktif. Klik 'Pasang Order Tertunda' untuk membuat pesanan baru."
         />
       </Card>
 
@@ -152,7 +156,7 @@ export const OrdersPage: React.FC = () => {
       <Modal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title="Create Pending Entry Order"
+        title="Buat Order Tertunda Baru"
       >
         {successMsg ? (
           <div className="p-6 text-center space-y-2">
@@ -163,28 +167,28 @@ export const OrdersPage: React.FC = () => {
           <form onSubmit={handleCreateOrder} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
-                label="Instrument"
+                label="Instrumen Pasar"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 options={markets.map((m) => ({ value: m.symbol, label: m.symbol }))}
               />
 
               <Select
-                label="Order Type"
+                label="Tipe Order"
                 value={orderType}
                 onChange={(e) => setOrderType(e.target.value as OrderType)}
                 options={[
-                  { value: 'BUY_LIMIT', label: 'Buy Limit (Buy below current)' },
-                  { value: 'SELL_LIMIT', label: 'Sell Limit (Sell above current)' },
-                  { value: 'BUY_STOP', label: 'Buy Stop (Breakout buy)' },
-                  { value: 'SELL_STOP', label: 'Sell Stop (Breakout sell)' },
+                  { value: 'LIMIT_BUY', label: 'Buy Limit (Beli di bawah harga sekarang)' },
+                  { value: 'LIMIT_SELL', label: 'Sell Limit (Jual di atas harga sekarang)' },
+                  { value: 'STOP_BUY', label: 'Buy Stop (Breakout beli)' },
+                  { value: 'STOP_SELL', label: 'Sell Stop (Breakout jual)' },
                 ]}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Volume (Lots)"
+                label="Volume (Lot)"
                 type="number"
                 step="0.01"
                 min="0.01"
@@ -194,7 +198,7 @@ export const OrdersPage: React.FC = () => {
               />
 
               <Input
-                label="Target Trigger Price"
+                label="Harga Pemicu Target"
                 type="number"
                 step="any"
                 value={targetPrice}
@@ -205,20 +209,20 @@ export const OrdersPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Stop Loss (Optional)"
+                label="Stop Loss (Opsional)"
                 type="number"
                 step="any"
                 value={sl}
                 onChange={(e) => setSl(e.target.value)}
-                placeholder="e.g. 1.0780"
+                placeholder="Contoh: 1.0780"
               />
               <Input
-                label="Take Profit (Optional)"
+                label="Take Profit (Opsional)"
                 type="number"
                 step="any"
                 value={tp}
                 onChange={(e) => setTp(e.target.value)}
-                placeholder="e.g. 1.0920"
+                placeholder="Contoh: 1.0920"
               />
             </div>
 
@@ -228,9 +232,9 @@ export const OrdersPage: React.FC = () => {
                 variant="secondary"
                 onClick={() => setCreateModalOpen(false)}
               >
-                Cancel
+                Batal
               </Button>
-              <Button type="submit">Submit Pending Order</Button>
+              <Button type="submit">Pasang Order</Button>
             </div>
           </form>
         )}

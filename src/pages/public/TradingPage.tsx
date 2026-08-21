@@ -14,6 +14,7 @@ export const TradingPage: React.FC = () => {
       id: 'forex',
       title: 'Forex Currency Trading',
       badge: '60+ Pairs',
+      image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
       description: 'Trade major, minor, and exotic foreign exchange pairs 24 hours a day, 5 days a week with competitive pricing and tight execution.',
       specs: [
         { label: 'Leverage', value: 'Up to 1:1000' },
@@ -33,6 +34,7 @@ export const TradingPage: React.FC = () => {
       id: 'gold',
       title: 'Precious Metals & Gold',
       badge: 'Safe-Haven',
+      image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=1200&q=80',
       description: 'Capitalize on geopolitical volatility, inflation hedging, and global monetary policy shifts by trading Spot Gold (XAU/USD) and Spot Silver (XAG/USD).',
       specs: [
         { label: 'Leverage', value: 'Up to 1:500' },
@@ -51,6 +53,7 @@ export const TradingPage: React.FC = () => {
       id: 'indices',
       title: 'Global Stock Indices',
       badge: '15+ Indices',
+      image: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
       description: 'Gain comprehensive exposure to entire national equity markets in a single trade with benchmark indices from the US, Europe, and Asia.',
       specs: [
         { label: 'Leverage', value: 'Up to 1:200' },
@@ -69,6 +72,7 @@ export const TradingPage: React.FC = () => {
       id: 'commodities',
       title: 'Energy & Commodities',
       badge: 'Crude Oil & Gas',
+      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
       description: 'Trade physical energy commodities including West Texas Intermediate (WTI) and Brent Crude Oil spot contracts directly from your trading dashboard.',
       specs: [
         { label: 'Leverage', value: 'Up to 1:100' },
@@ -87,6 +91,7 @@ export const TradingPage: React.FC = () => {
       id: 'crypto',
       title: 'Cryptocurrency CFDs',
       badge: '24/7 Trading',
+      image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=1200&q=80',
       description: 'Trade major digital assets like Bitcoin (BTC/USD), Ethereum (ETH/USD), and Solana (SOL/USD) 24 hours a day, 7 days a week.',
       specs: [
         { label: 'Leverage', value: 'Up to 1:50' },
@@ -105,6 +110,7 @@ export const TradingPage: React.FC = () => {
       id: 'cfds',
       title: 'Global Equity CFDs',
       badge: 'Top Equities',
+      image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=1200&q=80',
       description: 'Access individual stock contracts for difference on leading technology, financial, and manufacturing enterprises across international exchanges.',
       specs: [
         { label: 'Leverage', value: 'Up to 1:20' },
@@ -138,91 +144,96 @@ export const TradingPage: React.FC = () => {
 
       {/* Product Sections */}
       <div className="space-y-12">
-        {tradingProducts.map((product, idx) => (
+        {tradingProducts.map((product) => (
           <section
             key={product.id}
             id={product.id}
-            className="scroll-mt-24 p-6 sm:p-8 bg-[#0D0D0F] border border-neutral-800 rounded-2xl space-y-6"
+            className="scroll-mt-24 bg-[#0D0D0F] border border-neutral-800 rounded-2xl overflow-hidden"
           >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            {/* Visual Cover Banner */}
+            <div className="relative h-44 sm:h-52 w-full overflow-hidden border-b border-neutral-800">
+              <img
+                src={product.image}
+                alt={product.title}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover brightness-60 hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0F] via-[#0D0D0F]/40 to-transparent" />
+              <div className="absolute bottom-4 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="red" size="sm">
+                      {product.badge}
+                    </Badge>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-md">
                     {product.title}
                   </h2>
-                  <Badge variant="red" size="sm">
-                    {product.badge}
-                  </Badge>
                 </div>
-                <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl">{product.description}</p>
+                <Link to="/markets">
+                  <Button size="sm" className="whitespace-nowrap shrink-0">
+                    Trade {product.badge} <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                </Link>
               </div>
-              <Link to="/markets">
-                <Button size="sm" className="whitespace-nowrap shrink-0">
-                  VIEW MARKET <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </Link>
             </div>
 
-            {/* Specifications Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#151518] p-4 rounded-xl border border-neutral-800/80 font-mono-num text-xs">
-              {product.specs.map((spec, sIdx) => (
-                <div key={sIdx}>
-                  <span className="text-neutral-400 block text-[10px] uppercase font-semibold">
-                    {spec.label}
-                  </span>
-                  <span className="font-bold text-white text-sm">{spec.value}</span>
-                </div>
-              ))}
-            </div>
+            <div className="p-6 sm:p-8 space-y-6">
+              <p className="text-xs sm:text-sm text-neutral-300 max-w-3xl leading-relaxed">
+                {product.description}
+              </p>
 
-            {/* Features & Symbol Tags */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-                  Key Trading Advantages
-                </h4>
-                <ul className="space-y-2 text-xs text-neutral-300">
-                  {product.features.map((feat, fIdx) => (
-                    <li key={fIdx} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+              {/* Specs Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#151518] p-4 rounded-xl border border-neutral-800 font-mono-num text-xs">
+                {product.specs.map((spec, sIdx) => (
+                  <div key={sIdx} className="space-y-0.5">
+                    <span className="text-neutral-500 uppercase text-[10px] block font-semibold">
+                      {spec.label}
+                    </span>
+                    <span className="font-bold text-white text-sm">{spec.value}</span>
+                  </div>
+                ))}
               </div>
 
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-                  Featured Instruments
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {product.sampleSymbols.map((sym, sIdx) => (
-                    <Link
-                      key={sIdx}
-                      to="/markets"
-                      className="px-3 py-1.5 bg-[#151518] hover:bg-neutral-800 border border-neutral-800 text-xs font-mono-num font-semibold text-neutral-200 rounded-lg transition-colors flex items-center gap-1.5"
-                    >
-                      <TrendingUp className="w-3 h-3 text-red-500" />
-                      <span>{sym}</span>
-                    </Link>
-                  ))}
+              {/* Features and Symbols */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    Instrument Advantages
+                  </h4>
+                  <ul className="space-y-2 text-xs text-neutral-300">
+                    {product.features.map((feat, fIdx) => (
+                      <li key={fIdx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="mt-4 p-3 bg-[#121216] rounded-lg border border-neutral-800/80 text-[11px] text-neutral-400">
-                  All market executions operate under demo conditions with simulated virtual settlement.
+
+                <div className="space-y-3 bg-[#151518]/60 p-4 rounded-xl border border-neutral-800/80">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    Popular Benchmark Assets
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sampleSymbols.map((sym, symIdx) => (
+                      <span
+                        key={symIdx}
+                        className="px-3 py-1.5 bg-[#0D0D0F] rounded-lg text-xs font-bold text-white border border-neutral-700 font-mono-num flex items-center gap-1.5"
+                      >
+                        <TrendingUp className="w-3 h-3 text-red-400" />
+                        {sym}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-neutral-400 pt-2">
+                    Simulate real-time orders on all instruments with full live chart interactivity.
+                  </p>
                 </div>
               </div>
             </div>
           </section>
         ))}
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="text-center pt-8">
-        <Link to="/register">
-          <Button size="lg" className="px-10">
-            OPEN FREE DEMO ACCOUNT
-          </Button>
-        </Link>
       </div>
     </div>
   );

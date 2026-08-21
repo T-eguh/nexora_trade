@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
-import { Modal } from '../../components/Modal';
-import { Input } from '../../components/Input';
-import { Select } from '../../components/Select';
 import { useAccounts, useAuth } from '../../hooks/useStorage';
 import { StorageService } from '../../utils/storage';
-import { Wallet, Plus, ArrowDownCircle, ArrowUpCircle, CheckCircle2, Shield } from 'lucide-react';
 import { AccountTierType, TradingAccount } from '../../types';
 import { Link } from 'react-router-dom';
+import {
+  Plus,
+  ArrowDownCircle,
+  TrendingUp,
+  CheckCircle2,
+  X,
+  ShieldCheck,
+} from 'lucide-react';
 
 export const TradingAccountsPage: React.FC = () => {
   const { accounts } = useAccounts();
@@ -18,14 +19,14 @@ export const TradingAccountsPage: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<AccountTierType>('Pro');
   const [leverage, setLeverage] = useState('1000');
-  const [initialDeposit, setInitialDeposit] = useState('10000');
+  const [initialDeposit, setInitialDeposit] = useState('1000');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleCreateAccount = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const accNum = `NX-${Math.floor(100000 + Math.random() * 900000)}`;
+    const accNum = `205128${Math.floor(100 + Math.random() * 900)}`;
     const newAcc: Omit<TradingAccount, 'id'> = {
       userId: user.id,
       accountId: accNum,
@@ -33,170 +34,207 @@ export const TradingAccountsPage: React.FC = () => {
       type: selectedTier,
       tier: selectedTier,
       currency: 'USD',
-      balance: parseFloat(initialDeposit) || 10000,
-      equity: parseFloat(initialDeposit) || 10000,
+      balance: parseFloat(initialDeposit) || 1000,
+      equity: parseFloat(initialDeposit) || 1000,
       margin: 0,
       marginUsed: 0,
-      freeMargin: parseFloat(initialDeposit) || 10000,
+      freeMargin: parseFloat(initialDeposit) || 1000,
       leverage: `1:${leverage}`,
       server: 'Nexora-Live-01',
       status: 'active',
     };
 
     StorageService.addAccount(newAcc);
-    setSuccessMsg(`Trading Account ${newAcc.accountNumber} provisioned successfully!`);
+    setSuccessMsg(`Akun Trading #${newAcc.accountNumber} berhasil dibuat!`);
     setTimeout(() => {
       setSuccessMsg(null);
       setCreateModalOpen(false);
-    }, 2000);
+    }, 1500);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Trading Accounts Management
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
+            Pengelolaan Akun Trading
           </h1>
-          <p className="text-xs text-neutral-400">
-            Manage multiple virtual trading accounts, adjust leverage parameters, and allocate demo capital.
+          <p className="text-xs text-neutral-500">
+            Buka akun trading baru, atur rasio leverage, dan kelola alokasi modal trading Anda.
           </p>
         </div>
 
-        <Button onClick={() => setCreateModalOpen(true)} size="md">
-          <Plus className="w-4 h-4 mr-1.5" /> Create New Demo Account
-        </Button>
+        <button
+          type="button"
+          onClick={() => setCreateModalOpen(true)}
+          className="px-4 py-2.5 bg-[#15803d] hover:bg-[#166534] text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 shadow cursor-pointer w-fit"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Buka Akun Trading Baru</span>
+        </button>
       </div>
 
       {/* Accounts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {accounts.map((acc) => (
-          <Card key={acc.id} padding="lg" className="space-y-5 flex flex-col justify-between">
+          <div
+            key={acc.id}
+            className="bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm flex flex-col justify-between space-y-4"
+          >
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
                 <div>
                   <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
-                    Account Number
+                    Nomor Akun
                   </span>
-                  <strong className="text-lg font-black text-white font-mono-num">
-                    {acc.accountNumber}
+                  <strong className="text-base font-bold text-neutral-900 font-mono">
+                    #{acc.accountNumber}
                   </strong>
                 </div>
-                <Badge variant={acc.tier === 'Premium' ? 'red' : 'neutral'} size="sm">
-                  {acc.tier} Tier
-                </Badge>
+                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                  {acc.tier || 'Cent news'}
+                </span>
               </div>
 
-              <div className="py-4 space-y-3 font-mono-num text-xs">
+              <div className="py-3 space-y-2.5 font-sans text-xs">
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Balance:</span>
-                  <span className="text-base font-bold text-white">
-                    ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
+                  <span className="text-neutral-500">Saldo:</span>
+                  <strong className="text-neutral-900 font-mono">
+                    ${acc.balance.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
+                  </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Equity:</span>
-                  <span className="font-semibold text-emerald-400">
-                    ${acc.equity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
+                  <span className="text-neutral-500">Ekuitas:</span>
+                  <strong className="text-emerald-700 font-mono">
+                    ${acc.equity.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
+                  </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Leverage:</span>
-                  <span className="text-neutral-200">{acc.leverage}</span>
+                  <span className="text-neutral-500">Leverage:</span>
+                  <span className="font-mono text-neutral-800">{acc.leverage}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Server:</span>
-                  <span className="text-neutral-300 font-sans text-[11px]">{acc.server}</span>
+                  <span className="text-neutral-500">Server:</span>
+                  <span className="text-neutral-700 font-mono text-[11px]">{acc.server}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Status:</span>
-                  <span className="text-emerald-400 font-bold uppercase text-[11px]">
-                    {acc.status}
+                  <span className="text-neutral-500">Status:</span>
+                  <span className="text-emerald-700 font-bold text-[11px] uppercase">
+                    Aktif / Terverifikasi
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-neutral-800 grid grid-cols-2 gap-2">
-              <Link to="/dashboard/deposit">
-                <Button variant="secondary" size="sm" fullWidth>
-                  <ArrowDownCircle className="w-3.5 h-3.5 mr-1" /> Deposit
-                </Button>
+            <div className="pt-2 border-t border-neutral-100 grid grid-cols-2 gap-2">
+              <Link
+                to="/dashboard/deposit"
+                className="py-2 px-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs rounded-lg transition-colors text-center"
+              >
+                Deposit
               </Link>
-              <Link to="/dashboard/markets">
-                <Button size="sm" fullWidth>
-                  Trade Now
-                </Button>
+              <Link
+                to="/dashboard/markets"
+                className="py-2 px-3 bg-[#15803d] hover:bg-[#166534] text-white font-bold text-xs rounded-lg transition-colors text-center shadow"
+              >
+                Trading Sekarang
               </Link>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
       {/* Create Account Modal */}
-      <Modal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        title="Open New Demo Trading Account"
-      >
-        {successMsg ? (
-          <div className="py-8 text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-            <h4 className="text-base font-bold text-white">{successMsg}</h4>
-          </div>
-        ) : (
-          <form onSubmit={handleCreateAccount} className="space-y-4">
-            <Select
-              label="Account Tier"
-              value={selectedTier}
-              onChange={(e) => setSelectedTier(e.target.value as AccountTierType)}
-              options={[
-                { value: 'Starter', label: 'Starter ($10 Min / 1:500)' },
-                { value: 'Pro', label: 'Pro Tier ($100 Min / 1:1000) [Popular]' },
-                { value: 'Zero', label: 'Zero Spread (0.0 Pip Raw)' },
-                { value: 'Premium', label: 'Premium VIP (1:2000 Institutional)' },
-              ]}
-            />
-
-            <Select
-              label="Account Leverage"
-              value={leverage}
-              onChange={(e) => setLeverage(e.target.value)}
-              options={[
-                { value: '100', label: '1:100' },
-                { value: '200', label: '1:200' },
-                { value: '500', label: '1:500' },
-                { value: '1000', label: '1:1000 (Recommended)' },
-                { value: '2000', label: '1:2000 (High Risk)' },
-              ]}
-            />
-
-            <Input
-              label="Initial Demo Capital (USD)"
-              type="number"
-              min="100"
-              max="100000"
-              step="100"
-              value={initialDeposit}
-              onChange={(e) => setInitialDeposit(e.target.value)}
-              required
-              helperText="Virtual funds credited instantly upon account creation."
-            />
-
-            <div className="pt-3 flex justify-end gap-2">
-              <Button
+      {createModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-scaleUp">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <h3 className="text-base font-bold text-neutral-900">
+                Buka Akun Trading Baru
+              </h3>
+              <button
                 type="button"
-                variant="secondary"
                 onClick={() => setCreateModalOpen(false)}
+                className="text-neutral-400 hover:text-neutral-700"
               >
-                Cancel
-              </Button>
-              <Button type="submit">Create Account</Button>
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          </form>
-        )}
-      </Modal>
+
+            {successMsg ? (
+              <div className="py-6 text-center space-y-3">
+                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+                <h4 className="text-sm font-bold text-neutral-900">{successMsg}</h4>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateAccount} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="block text-neutral-700 font-semibold mb-1">
+                    Tipe Akun
+                  </label>
+                  <select
+                    value={selectedTier}
+                    onChange={(e) => setSelectedTier(e.target.value as AccountTierType)}
+                    className="w-full p-2.5 border border-neutral-300 rounded-lg text-xs font-medium"
+                  >
+                    <option value="Pro">Cent / Pro Tier (1:1000) [Populer]</option>
+                    <option value="Zero">Zero Spread (0.0 Pip Raw)</option>
+                    <option value="Starter">Starter Micro</option>
+                    <option value="Premium">Premium VIP</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-neutral-700 font-semibold mb-1">
+                    Leverage Akun
+                  </label>
+                  <select
+                    value={leverage}
+                    onChange={(e) => setLeverage(e.target.value)}
+                    className="w-full p-2.5 border border-neutral-300 rounded-lg text-xs font-medium"
+                  >
+                    <option value="500">1:500</option>
+                    <option value="1000">1:1000 (Direkomendasikan)</option>
+                    <option value="2000">1:2000</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-neutral-700 font-semibold mb-1">
+                    Saldo Awal (USD)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    step="100"
+                    required
+                    value={initialDeposit}
+                    onChange={(e) => setInitialDeposit(e.target.value)}
+                    className="w-full p-2.5 border border-neutral-300 rounded-lg text-xs font-mono"
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateModalOpen(false)}
+                    className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold rounded-lg"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-[#15803d] hover:bg-[#166534] text-white font-bold rounded-lg shadow"
+                  >
+                    Buat Akun
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

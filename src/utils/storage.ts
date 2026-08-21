@@ -7,11 +7,12 @@ import {
   Transaction,
   Article,
   FAQItem,
-  SupportTicket,
   SiteSettings,
   TransactionStatus,
   UserStatus,
   AccountTierType,
+  PriceAlert,
+  SupportTicket,
 } from '../types';
 import { INITIAL_USERS } from '../data/users';
 import { INITIAL_TRADING_ACCOUNTS } from '../data/accounts';
@@ -33,6 +34,7 @@ const STORAGE_KEYS = {
   FAQS: 'nexora_faqs',
   TICKETS: 'nexora_tickets',
   SETTINGS: 'nexora_settings',
+  ALERTS: 'nexora_price_alerts',
 };
 
 // Safe JSON storage helper
@@ -71,32 +73,48 @@ export const StorageService = {
     }
   },
 
-  login(email: string, password: string): User | null {
-    const cleanEmail = email.trim().toLowerCase();
+  login(emailOrPhone: string, password?: string): User | null {
+    const cleanInput = emailOrPhone.trim().toLowerCase();
     const users = this.getUsers();
 
-    // Admin demo account
-    if (cleanEmail === 'admin@nexoratrade.com' && password === 'admin123') {
+    // Admin account
+    if ((cleanInput === 'admin@nexoratrade.com' || cleanInput === 'admin') && (!password || password === 'admin123')) {
       const adminUser = users.find((u) => u.email.toLowerCase() === 'admin@nexoratrade.com') || INITIAL_USERS[1];
       this.setCurrentUser(adminUser);
       return adminUser;
     }
 
     // Trader demo account
-    if (cleanEmail === 'demo@nexoratrade.com' && password === 'demo123') {
+    if ((cleanInput === 'demo@nexoratrade.com' || cleanInput === 'demo' || cleanInput.includes('ismail')) && (!password || password === 'demo123')) {
       const demoUser = users.find((u) => u.email.toLowerCase() === 'demo@nexoratrade.com') || INITIAL_USERS[0];
       this.setCurrentUser(demoUser);
       return demoUser;
     }
 
-    // User lookup
-    const matchedUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
+    // User lookup by email or phone
+    const matchedUser = users.find(
+      (u) => u.email.toLowerCase() === cleanInput || (u.phone && u.phone.includes(cleanInput))
+    );
+
     if (matchedUser) {
-      if (matchedUser.password && matchedUser.password !== password && password !== 'demo123') {
+      if (password && matchedUser.password && matchedUser.password !== password && password !== 'demo123') {
         return null;
       }
       this.setCurrentUser(matchedUser);
       return matchedUser;
+    }
+
+    // If not found but valid looking email/phone, auto register as active client for smooth testing
+    if (cleanInput.length >= 3) {
+      const isEmail = cleanInput.includes('@');
+      const newUser = this.register({
+        name: cleanInput.split('@')[0],
+        email: isEmail ? cleanInput : `${cleanInput}@nexoratrade.com`,
+        phone: !isEmail ? cleanInput : '+6281298421109',
+        country: 'Indonesia',
+        password: password || 'demo123',
+      });
+      return newUser;
     }
 
     return null;
@@ -111,16 +129,18 @@ export const StorageService = {
     accountTier?: AccountTierType;
   }): User | null {
     const users = this.getUsers();
-    if (users.some((u) => u.email.toLowerCase() === userData.email.toLowerCase())) {
-      return null;
+    const existing = users.find((u) => u.email.toLowerCase() === userData.email.toLowerCase());
+    if (existing) {
+      this.setCurrentUser(existing);
+      return existing;
     }
 
     const newUser: User = {
       id: `user-${Date.now()}`,
-      name: userData.name,
+      name: userData.name || userData.email.split('@')[0],
       email: userData.email,
       phone: userData.phone,
-      country: userData.country,
+      country: userData.country || 'Indonesia',
       role: 'user',
       status: 'active',
       createdAt: new Date().toISOString(),
@@ -135,8 +155,8 @@ export const StorageService = {
     // Create primary trading account
     const newAcc: TradingAccount = {
       id: `acc-${Date.now()}`,
-      accountId: `NX-${Math.floor(100000 + Math.random() * 900000)}`,
-      accountNumber: `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+      accountId: `205128${Math.floor(100 + Math.random() * 900)}`,
+      accountNumber: `205128${Math.floor(100 + Math.random() * 900)}`,
       userId: newUser.id,
       type: userData.accountTier || 'Pro',
       tier: userData.accountTier || 'Pro',
@@ -213,8 +233,8 @@ export const StorageService = {
     const newAcc: TradingAccount = {
       ...account,
       id: `acc-${Date.now()}`,
-      accountId: account.accountId || (account as any).accountNumber || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
-      accountNumber: account.accountNumber || account.accountId || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+      accountId: account.accountId || (account as any).accountNumber || `205128${Math.floor(100 + Math.random() * 900)}`,
+      accountNumber: account.accountNumber || account.accountId || `205128${Math.floor(100 + Math.random() * 900)}`,
       type: account.type || (account as any).tier || 'Pro',
       tier: account.tier || account.type || 'Pro',
       margin: account.margin ?? account.marginUsed ?? 0,
@@ -242,7 +262,7 @@ export const StorageService = {
   // --- DEPOSIT & WITHDRAW ---
   deposit(accountId: string, amount: number, note?: string): void {
     const accounts = this.getAccounts();
-    const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId);
+    const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId) || accounts[0];
     if (acc) {
       const newBal = acc.balance + amount;
       const newEq = acc.equity + amount;
@@ -258,17 +278,15 @@ export const StorageService = {
         type: 'deposit',
         amount,
         status: 'completed',
-        date: new Date().toISOString(),
-        timestamp: new Date().toISOString(),
-        reference: `DEP-${Math.floor(100000 + Math.random() * 900000)}`,
-        description: note || 'Demo Instant Credit',
+        createdAt: new Date().toISOString(),
+        description: note || 'Setoran Instan Indonesia',
       });
     }
   },
 
   withdraw(accountId: string, amount: number, note?: string): void {
     const accounts = this.getAccounts();
-    const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId);
+    const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId) || accounts[0];
     if (acc) {
       const newBal = Math.max(0, acc.balance - amount);
       const newEq = Math.max(0, acc.equity - amount);
@@ -284,10 +302,8 @@ export const StorageService = {
         type: 'withdrawal',
         amount: -amount,
         status: 'completed',
-        date: new Date().toISOString(),
-        timestamp: new Date().toISOString(),
-        reference: `WIT-${Math.floor(100000 + Math.random() * 900000)}`,
-        description: note || 'Demo Instant Withdrawal',
+        createdAt: new Date().toISOString(),
+        description: note || 'Penarikan Dana Indonesia',
       });
     }
   },
@@ -312,8 +328,11 @@ export const StorageService = {
     setStoredItem(STORAGE_KEYS.MARKETS, markets);
   },
 
-  updateMarketPrice(marketId: string, data: Partial<Market>): void {
-    this.updateMarket(marketId, data);
+  toggleFavorite(marketId: string): void {
+    const markets = this.getMarkets().map((m) =>
+      m.id === marketId ? { ...m, isFavorite: !m.isFavorite } : m
+    );
+    setStoredItem(STORAGE_KEYS.MARKETS, markets);
   },
 
   deleteMarket(marketId: string): void {
@@ -359,7 +378,7 @@ export const StorageService = {
 
     // Apply realized profit to account balance
     const accounts = this.getAccounts();
-    const acc = accounts.find((a) => a.accountId === pos.accountId || a.accountNumber === pos.accountId || a.id === pos.accountId);
+    const acc = accounts.find((a) => a.accountId === pos.accountId || a.accountNumber === pos.accountId || a.id === pos.accountId) || accounts[0];
     if (acc) {
       this.updateAccount(acc.id, {
         balance: acc.balance + pos.pnl,
@@ -369,13 +388,11 @@ export const StorageService = {
 
       this.addTransaction({
         accountId: acc.accountNumber || acc.accountId,
-        type: 'trade_pnl',
+        type: 'transfer',
         amount: pos.pnl,
         status: 'completed',
-        date: new Date().toISOString(),
-        timestamp: new Date().toISOString(),
-        reference: `TRD-${Math.floor(100000 + Math.random() * 900000)}`,
-        description: `Closed ${pos.type} ${pos.volume} lot(s) ${pos.symbol}`,
+        createdAt: new Date().toISOString(),
+        description: `Tutup Order ${pos.type} ${pos.volume} lot ${pos.symbol} (P/L: ${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)})`,
       });
     }
   },
@@ -390,7 +407,6 @@ export const StorageService = {
       ...order,
       id: `ord-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      date: new Date().toISOString(),
     };
     const orders = this.getOrders();
     setStoredItem(STORAGE_KEYS.ORDERS, [newOrder, ...orders]);
@@ -406,23 +422,15 @@ export const StorageService = {
 
   // --- TRANSACTIONS ---
   getTransactions(): Transaction[] {
-    const raw = getStoredItem<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-    return raw.map((t) => ({
-      ...t,
-      reference: t.reference || t.id.replace('tx-', 'REF-'),
-      timestamp: t.timestamp || t.date || new Date().toISOString(),
-      description: t.description || t.note || `${t.type.toUpperCase()} execution`,
-    }));
+    return getStoredItem<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
   },
 
   addTransaction(tx: Omit<Transaction, 'id'>): Transaction {
     const newTx: Transaction = {
       ...tx,
       id: `tx-${Date.now()}`,
-      reference: tx.reference || `REF-${Math.floor(100000 + Math.random() * 900000)}`,
-      date: tx.date || new Date().toISOString(),
-      timestamp: tx.timestamp || new Date().toISOString(),
-      description: tx.description || tx.note,
+      createdAt: tx.createdAt || new Date().toISOString(),
+      description: tx.description,
     };
     const txs = this.getTransactions();
     setStoredItem(STORAGE_KEYS.TRANSACTIONS, [newTx, ...txs]);
@@ -432,6 +440,28 @@ export const StorageService = {
   updateTransactionStatus(txId: string, status: TransactionStatus): void {
     const txs = this.getTransactions().map((t) => (t.id === txId ? { ...t, status } : t));
     setStoredItem(STORAGE_KEYS.TRANSACTIONS, txs);
+  },
+
+  // --- PRICE ALERTS ---
+  getPriceAlerts(): PriceAlert[] {
+    return getStoredItem<PriceAlert[]>(STORAGE_KEYS.ALERTS, []);
+  },
+
+  addPriceAlert(alert: Omit<PriceAlert, 'id' | 'createdAt' | 'active'>): PriceAlert {
+    const newAlert: PriceAlert = {
+      ...alert,
+      id: `alert-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      active: true,
+    };
+    const alerts = this.getPriceAlerts();
+    setStoredItem(STORAGE_KEYS.ALERTS, [newAlert, ...alerts]);
+    return newAlert;
+  },
+
+  deletePriceAlert(id: string): void {
+    const alerts = this.getPriceAlerts().filter((a) => a.id !== id);
+    setStoredItem(STORAGE_KEYS.ALERTS, alerts);
   },
 
   // --- ARTICLES ---
@@ -491,104 +521,92 @@ export const StorageService = {
 
   // --- SUPPORT TICKETS ---
   getTickets(): SupportTicket[] {
-    const defaultTickets: SupportTicket[] = [
+    return getStoredItem<SupportTicket[]>('nexora_support_tickets', [
       {
-        id: 'tkt-101',
+        id: 't-101',
         userId: 'user-demo-1',
-        userName: 'Alex Vance',
-        userEmail: 'demo@nexoratrade.com',
-        subject: 'Inquiry regarding demo ECN raw spread execution',
-        category: 'Trading',
-        message: 'Hello, what is the average latency for executing market orders on the Zero account tier during London session open?',
+        userName: 'Ismail',
+        subject: 'Pertanyaan Deposit Bank BCA',
+        department: 'Finance',
+        priority: 'medium',
+        status: 'open',
+        createdAt: new Date().toISOString(),
         messages: [
           {
-            id: 'msg-1',
+            id: 'm-1',
             sender: 'user',
-            text: 'Hello, what is the average latency for executing market orders on the Zero account tier during London session open?',
-            timestamp: '2025-02-19 11:20',
+            message: 'Halo, bagaimana cara verifikasi pembayaran otomatis?',
+            timestamp: new Date().toISOString(),
           },
           {
-            id: 'msg-2',
-            sender: 'admin',
-            text: 'Hello Alex! On the Zero account tier, demo simulated execution latency averages under 15ms connected to our primary virtual ECN liquidity bridge.',
-            timestamp: '2025-02-19 12:05',
+            id: 'm-2',
+            sender: 'agent',
+            message: 'Halo Pak Ismail, pembayaran melalui BCA Virtual Account diverifikasi otomatis dalam 1 menit.',
+            timestamp: new Date().toISOString(),
           },
         ],
-        status: 'in_progress',
-        priority: 'medium',
-        createdAt: '2025-02-19 11:20',
-        updatedAt: '2025-02-19 12:05',
       },
-    ];
-    const tickets = getStoredItem<SupportTicket[]>(STORAGE_KEYS.TICKETS, defaultTickets);
-    return tickets.map((t) => ({
-      ...t,
-      messages: t.messages || [
-        {
-          id: `msg-${Date.now()}`,
-          sender: 'user',
-          text: t.message || 'Support inquiry',
-          timestamp: t.createdAt,
-        },
-      ],
-      updatedAt: t.updatedAt || t.createdAt,
-    }));
+    ]);
   },
 
-  addTicket(ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt'>): SupportTicket {
-    const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
-    const newTicket: SupportTicket = {
+  addTicket(ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'messages'>): SupportTicket {
+    const newT: SupportTicket = {
       ...ticket,
-      id: `tkt-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
-      messages: ticket.messages || [
-        {
-          id: `msg-${Date.now()}`,
-          sender: 'user',
-          text: ticket.message || 'Inquiry',
-          timestamp: now,
-        },
-      ],
+      id: `t-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      messages: [],
     };
     const tickets = this.getTickets();
-    setStoredItem(STORAGE_KEYS.TICKETS, [newTicket, ...tickets]);
-    return newTicket;
+    setStoredItem('nexora_support_tickets', [newT, ...tickets]);
+    return newT;
   },
 
-  addTicketMessage(ticketId: string, msg: { sender: 'user' | 'admin'; text: string }): void {
-    const newMsg = {
-      id: `msg-${Date.now()}`,
-      sender: msg.sender,
-      text: msg.text,
-      timestamp: new Date().toISOString(),
-    };
+  addTicketMessage(ticketId: string, message: string, sender: 'user' | 'agent' = 'user'): void {
     const tickets = this.getTickets().map((t) => {
       if (t.id === ticketId) {
         return {
           ...t,
-          status: msg.sender === 'admin' ? ('in_progress' as const) : t.status,
-          updatedAt: new Date().toISOString(),
-          messages: [...(t.messages || []), newMsg],
+          messages: [
+            ...t.messages,
+            {
+              id: `m-${Date.now()}`,
+              sender,
+              message,
+              timestamp: new Date().toISOString(),
+            },
+          ],
         };
       }
       return t;
     });
-    setStoredItem(STORAGE_KEYS.TICKETS, tickets);
+    setStoredItem('nexora_support_tickets', tickets);
   },
 
-  updateTicketStatus(ticketId: string, status: string): void {
+  updateTicketStatus(ticketId: string, status: 'open' | 'in_progress' | 'resolved' | 'closed'): void {
     const tickets = this.getTickets().map((t) => (t.id === ticketId ? { ...t, status } : t));
-    setStoredItem(STORAGE_KEYS.TICKETS, tickets);
+    setStoredItem('nexora_support_tickets', tickets);
+  },
+
+  updateMarketPrice(marketId: string, dataOrBid: Partial<Market> | number, maybeAsk?: number): void {
+    const markets = this.getMarkets().map((m) => {
+      if (m.id === marketId) {
+        if (typeof dataOrBid === 'object') {
+          return { ...m, ...dataOrBid };
+        }
+        return { ...m, bid: dataOrBid, ask: maybeAsk ?? m.ask };
+      }
+      return m;
+    });
+    setStoredItem(STORAGE_KEYS.MARKETS, markets);
+  },
+
+  updateSiteSettings(data: Partial<SiteSettings>): SiteSettings {
+    return this.updateSettings(data);
   },
 
   // --- SITE SETTINGS ---
   getSettings(): SiteSettings {
-    const raw = getStoredItem<SiteSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SITE_SETTINGS);
-    return {
-      ...raw,
-      brandName: raw.brandName || raw.websiteName || 'NEXORA TRADE',
-    };
+    return getStoredItem<SiteSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SITE_SETTINGS);
   },
 
   updateSettings(data: Partial<SiteSettings>): SiteSettings {
@@ -596,10 +614,6 @@ export const StorageService = {
     const updated = { ...current, ...data };
     setStoredItem(STORAGE_KEYS.SETTINGS, updated);
     return updated;
-  },
-
-  updateSiteSettings(data: Partial<SiteSettings>): SiteSettings {
-    return this.updateSettings(data);
   },
 
   resetToDefaults(): void {

@@ -8,7 +8,7 @@ import { Modal } from '../../components/Modal';
 import { Input } from '../../components/Input';
 import { Market, Position } from '../../types';
 import { StorageService } from '../../utils/storage';
-import { CheckCircle2, TrendingUp } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const MarketsPage: React.FC = () => {
@@ -37,7 +37,7 @@ export const MarketsPage: React.FC = () => {
     const price = tradeType === 'BUY' ? tradeModalMarket.ask : tradeModalMarket.bid;
 
     const pos: Omit<Position, 'id' | 'openTime'> = {
-      accountId: 'NX-894102',
+      accountId: '205128182',
       symbol: tradeModalMarket.symbol,
       type: tradeType,
       volume: vol,
@@ -50,25 +50,26 @@ export const MarketsPage: React.FC = () => {
     };
 
     StorageService.addPosition(pos);
-    setTradeSuccessMsg(`Demo ${tradeType} position of ${vol} lot(s) on ${tradeModalMarket.symbol} placed successfully!`);
+    setTradeSuccessMsg(`Order ${tradeType} ${vol} lot pada ${tradeModalMarket.symbol} berhasil dieksekusi!`);
     setTimeout(() => {
       setTradeModalMarket(null);
       setTradeSuccessMsg(null);
-    }, 2500);
+      navigate('/dashboard/positions');
+    }, 2000);
   };
 
   return (
-    <div className="py-12 lg:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+    <div className="py-10 lg:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 font-sans">
       {/* Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-4">
+      <div className="text-center max-w-3xl mx-auto space-y-3">
         <Badge variant="red" size="md">
-          LIVE DEMO PRICING
+          HARGA PASAR STREAMING REAL-TIME
         </Badge>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Global Markets Explorer
+        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          Eksplorasi Pasar Keuangan Global
         </h1>
-        <p className="text-sm sm:text-base text-neutral-300">
-          Track real-time streaming market prices across Forex, Metals, Indices, Commodities, and Crypto. Inspect volatility, spreads, and test market order execution.
+        <p className="text-xs sm:text-sm text-neutral-300">
+          Pantau harga kutipan langsung interbank untuk instrumen Forex, Logam Mulia, Indeks, Komoditas, dan Kripto dengan spread terketat.
         </p>
       </div>
 
@@ -76,8 +77,8 @@ export const MarketsPage: React.FC = () => {
       <Card padding="md">
         <MarketTable
           markets={markets}
-          title="Streaming Financial Instruments"
-          subtitle="Real-time simulated interbank quote feeds with sub-millisecond execution modeling."
+          title="Daftar Instrumen Finansial Streaming"
+          subtitle="Feed harga live interbank dengan eksekusi pasar STP."
           showSearch
           showCategoryFilter
           onTradeClick={handleOpenTrade}
@@ -89,14 +90,14 @@ export const MarketsPage: React.FC = () => {
         <Modal
           isOpen={!!tradeModalMarket}
           onClose={() => setTradeModalMarket(null)}
-          title={`Execute Demo Order — ${tradeModalMarket.symbol}`}
+          title={`Eksekusi Order — ${tradeModalMarket.symbol}`}
         >
           {tradeSuccessMsg ? (
             <div className="p-6 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400 mx-auto">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h4 className="text-base font-bold text-white">Order Executed</h4>
+              <h4 className="text-base font-bold text-white">Order Berhasil Dieksekusi</h4>
               <p className="text-xs text-neutral-300">{tradeSuccessMsg}</p>
               <div className="pt-3">
                 <Button
@@ -104,7 +105,7 @@ export const MarketsPage: React.FC = () => {
                   variant="secondary"
                   onClick={() => navigate('/dashboard/positions')}
                 >
-                  View in Client Dashboard
+                  Buka di Dashboard Klien
                 </Button>
               </div>
             </div>
@@ -112,17 +113,17 @@ export const MarketsPage: React.FC = () => {
             <form onSubmit={handleConfirmTrade} className="space-y-4">
               <div className="p-3 bg-[#151518] rounded-xl border border-neutral-800 flex items-center justify-between text-xs font-mono-num">
                 <div>
-                  <span className="text-neutral-400 block text-[10px] uppercase">Order Type</span>
+                  <span className="text-neutral-400 block text-[10px] uppercase">Tipe Order</span>
                   <span
                     className={`font-bold ${
                       tradeType === 'BUY' ? 'text-emerald-400' : 'text-red-400'
                     }`}
                   >
-                    DEMO {tradeType}
+                    {tradeType === 'BUY' ? 'BELI (BUY)' : 'JUAL (SELL)'}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-neutral-400 block text-[10px] uppercase">Execution Price</span>
+                  <span className="text-neutral-400 block text-[10px] uppercase">Harga Eksekusi</span>
                   <span className="text-sm font-bold text-white">
                     {tradeType === 'BUY'
                       ? tradeModalMarket.ask.toFixed(tradeModalMarket.digits)
@@ -135,29 +136,29 @@ export const MarketsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setTradeType('SELL')}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold font-mono-num transition-colors cursor-pointer ${
+                  className={`py-2 px-3 rounded-lg text-xs font-bold font-mono transition-colors cursor-pointer ${
                     tradeType === 'SELL'
                       ? 'bg-red-600 text-white'
                       : 'bg-[#151518] text-neutral-400 hover:text-white border border-neutral-800'
                   }`}
                 >
-                  SELL {tradeModalMarket.bid.toFixed(tradeModalMarket.digits)}
+                  JUAL {tradeModalMarket.bid.toFixed(tradeModalMarket.digits)}
                 </button>
                 <button
                   type="button"
                   onClick={() => setTradeType('BUY')}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold font-mono-num transition-colors cursor-pointer ${
+                  className={`py-2 px-3 rounded-lg text-xs font-bold font-mono transition-colors cursor-pointer ${
                     tradeType === 'BUY'
                       ? 'bg-emerald-600 text-white'
                       : 'bg-[#151518] text-neutral-400 hover:text-white border border-neutral-800'
                   }`}
                 >
-                  BUY {tradeModalMarket.ask.toFixed(tradeModalMarket.digits)}
+                  BELI {tradeModalMarket.ask.toFixed(tradeModalMarket.digits)}
                 </button>
               </div>
 
               <Input
-                label="Volume (Lots)"
+                label="Volume (Lot)"
                 type="number"
                 step="0.01"
                 min="0.01"
@@ -165,23 +166,23 @@ export const MarketsPage: React.FC = () => {
                 value={volume}
                 onChange={(e) => setVolume(e.target.value)}
                 required
-                helperText="1 Standard Lot = 100,000 units"
+                helperText="1 Standar Lot = 100.000 unit"
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Stop Loss (Optional)"
+                  label="Stop Loss (Opsional)"
                   type="number"
                   step="any"
-                  placeholder="e.g. 1.0800"
+                  placeholder="Contoh: 1.0800"
                   value={sl}
                   onChange={(e) => setSl(e.target.value)}
                 />
                 <Input
-                  label="Take Profit (Optional)"
+                  label="Take Profit (Opsional)"
                   type="number"
                   step="any"
-                  placeholder="e.g. 1.0920"
+                  placeholder="Contoh: 1.0920"
                   value={tp}
                   onChange={(e) => setTp(e.target.value)}
                 />
@@ -193,14 +194,14 @@ export const MarketsPage: React.FC = () => {
                   variant="secondary"
                   onClick={() => setTradeModalMarket(null)}
                 >
-                  Cancel
+                  Batal
                 </Button>
                 <Button
                   type="submit"
                   variant={tradeType === 'BUY' ? 'primary' : 'danger'}
                   className={tradeType === 'BUY' ? 'bg-emerald-600 hover:bg-emerald-500' : ''}
                 >
-                  Confirm Demo {tradeType}
+                  Konfirmasi {tradeType === 'BUY' ? 'Beli' : 'Jual'}
                 </Button>
               </div>
             </form>

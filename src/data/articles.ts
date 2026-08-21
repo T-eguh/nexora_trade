@@ -9,6 +9,7 @@ export const INITIAL_ARTICLES: Article[] = [
     readTime: '6 min read',
     publishedAt: '2025-01-10',
     author: 'Nexora Market Research Team',
+    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80',
     summary: 'A structured foundational guide to understanding how global financial markets work, currency pairs, bids, asks, and order execution.',
     content: `Financial trading is the process of speculating on the future price movements of assets including foreign currencies, precious metals, stock indices, energy commodities, and cryptocurrencies.
 
@@ -41,6 +42,7 @@ Trading volume is measured in standardized lots:
     readTime: '8 min read',
     publishedAt: '2025-01-18',
     author: 'David Bradley, Senior Strategist',
+    image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=800&q=80',
     summary: 'Explore price action setups, horizontal support/resistance zones, moving averages, and momentum oscillators for disciplined market entry.',
     content: `Technical analysis focuses on interpreting historical price action and trading volume to forecast probabilistic future directional bias.
 
@@ -70,6 +72,7 @@ Support represents a price floor where buying pressure historically overcomes se
     readTime: '7 min read',
     publishedAt: '2025-01-25',
     author: 'Elena Moreau, Risk Officer',
+    image: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80',
     summary: 'The single most decisive factor in long-term trading longevity is strict risk management. Learn how to calculate position size and protect equity.',
     content: `Professional traders distinguish themselves not through guaranteed winning trades, but through disciplined asymmetric risk management.
 
@@ -100,6 +103,7 @@ Aim for a minimum Risk-to-Reward ratio of 1:2. This means for every $100 you ris
     readTime: '5 min read',
     publishedAt: '2025-02-02',
     author: 'Nexora Market Research Team',
+    image: 'https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80',
     summary: 'Understand the neurological biases, FOMO, and emotional pitfalls that sabotage trading consistency, and how to build a disciplined execution routine.',
     content: `Trading is 20% technical strategy and 80% emotional execution. Without psychological resilience, even the best trading strategy will fail.
 
@@ -123,6 +127,7 @@ Grade your performance based on whether you followed your trading plan with flaw
     readTime: '6 min read',
     publishedAt: '2025-02-08',
     author: 'David Bradley, Senior Strategist',
+    image: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=800&q=80',
     summary: 'Deconstruct hammers, engulfing candles, morning stars, pin bars, and dojis to time high-probability trading entries with precision.',
     content: `Japanese candlestick charts provide an intuitive visual representation of the continuous tug-of-war between buyers (bulls) and sellers (bears).
 
@@ -149,6 +154,7 @@ Grade your performance based on whether you followed your trading plan with flaw
     readTime: '5 min read',
     publishedAt: '2025-02-14',
     author: 'Elena Moreau, Risk Officer',
+    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=800&q=80',
     summary: 'Demystify financial leverage, free margin, margin calls, and stop-out levels to navigate leveraged derivative instruments safely.',
     content: `Leverage allows traders to control larger market positions with a relatively smaller amount of initial capital, known as margin.
 

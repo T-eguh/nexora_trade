@@ -73,51 +73,76 @@ export const EducationPage: React.FC = () => {
           <Card
             key={article.id}
             hoverEffect
-            padding="md"
-            className="flex flex-col justify-between group"
+            padding="none"
+            className="flex flex-col justify-between group overflow-hidden"
           >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Badge variant="red" size="sm">
-                  {article.category}
-                </Badge>
-                <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono-num">
-                  <Clock className="w-3.5 h-3.5" />
+            {article.image && (
+              <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0F] via-transparent to-transparent" />
+                <div className="absolute top-3 left-3">
+                  <Badge variant="red" size="sm">
+                    {article.category}
+                  </Badge>
+                </div>
+                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-[11px] text-neutral-300 font-mono-num flex items-center gap-1 border border-neutral-800">
+                  <Clock className="w-3 h-3 text-neutral-400" />
                   {article.readTime}
+                </div>
+              </div>
+            )}
+
+            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+              <div className="space-y-2.5">
+                {!article.image && (
+                  <div className="flex items-center justify-between">
+                    <Badge variant="red" size="sm">
+                      {article.category}
+                    </Badge>
+                    <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono-num">
+                      <Clock className="w-3.5 h-3.5" />
+                      {article.readTime}
+                    </span>
+                  </div>
+                )}
+
+                <h3 className="text-lg font-bold text-white group-hover:text-red-400 transition-colors leading-snug">
+                  {article.title}
+                </h3>
+
+                <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3">
+                  {article.summary}
+                </p>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  {article.tags.map((t, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] bg-[#151518] text-neutral-400 px-2 py-0.5 rounded border border-neutral-800"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs">
+                <span className="text-neutral-400 truncate max-w-[150px]">
+                  {article.author}
                 </span>
+                <Link
+                  to={`/education/${article.slug}`}
+                  className="text-red-400 group-hover:text-red-300 font-semibold flex items-center gap-1 hover:underline"
+                >
+                  Read Article <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
-
-              <h3 className="text-lg font-bold text-white group-hover:text-red-400 transition-colors leading-snug">
-                {article.title}
-              </h3>
-
-              <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3">
-                {article.summary}
-              </p>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 pt-2">
-                {article.tags.map((t, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[10px] bg-[#151518] text-neutral-400 px-2 py-0.5 rounded border border-neutral-800"
-                  >
-                    #{t}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4 mt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs">
-              <span className="text-neutral-400 truncate max-w-[150px]">
-                {article.author}
-              </span>
-              <Link
-                to={`/education/${article.slug}`}
-                className="text-red-400 group-hover:text-red-300 font-semibold flex items-center gap-1 hover:underline"
-              >
-                Read Article <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </Card>
         ))}

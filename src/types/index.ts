@@ -20,23 +20,23 @@ export interface User {
 
 export interface TradingAccount {
   id: string;
-  accountId: string; // e.g. "NX-882910"
-  accountNumber?: string; // alias for accountId
+  accountId: string;
+  accountNumber?: string;
   userId: string;
   type: AccountTierType;
-  tier?: AccountTierType; // alias for type
+  tier?: AccountTierType;
   balance: number;
   equity: number;
-  leverage: string; // e.g. "1:500"
+  leverage: string;
   currency: string;
   status: AccountStatus;
   marginUsed: number;
-  margin?: number; // alias
+  margin?: number;
   freeMargin: number;
   server: string;
 }
 
-export type MarketCategory = 'Forex' | 'Metals' | 'Indices' | 'Commodities' | 'Crypto';
+export type MarketCategory = 'Favorit' | 'Forex' | 'Crypto' | 'Komoditas' | 'Metals' | 'Indices' | 'Indeks' | 'Commodities' | 'Saham';
 
 export interface Market {
   id: string;
@@ -54,6 +54,7 @@ export interface Market {
   pipValue: number;
   sparkline: number[];
   description?: string;
+  isFavorite?: boolean;
 }
 
 export type PositionType = 'BUY' | 'SELL';
@@ -64,19 +65,27 @@ export interface Position {
   accountId: string;
   symbol: string;
   type: PositionType;
-  volume: number; // in lots
+  volume: number;
   openPrice: number;
   currentPrice: number;
+  pnl: number;
+  status: PositionStatus;
+  openTime?: string;
+  closeTime?: string;
   closePrice?: number;
   sl?: number;
   tp?: number;
-  pnl: number;
-  status: PositionStatus;
-  openTime: string;
-  closeTime?: string;
 }
 
-export type OrderType = 'BUY LIMIT' | 'SELL LIMIT' | 'BUY STOP' | 'SELL STOP' | 'BUY_LIMIT' | 'SELL_LIMIT' | 'BUY_STOP' | 'SELL_STOP';
+export type OrderType =
+  | 'LIMIT_BUY'
+  | 'LIMIT_SELL'
+  | 'STOP_BUY'
+  | 'STOP_SELL'
+  | 'BUY LIMIT'
+  | 'SELL LIMIT'
+  | 'BUY STOP'
+  | 'SELL STOP';
 export type OrderStatus = 'pending' | 'executed' | 'cancelled';
 
 export interface Order {
@@ -85,34 +94,41 @@ export interface Order {
   symbol: string;
   type: OrderType;
   volume: number;
+  targetPrice: number;
   price?: number;
-  targetPrice?: number;
   currentPrice?: number;
+  status: OrderStatus;
+  createdAt: string;
   sl?: number;
   tp?: number;
-  status: OrderStatus;
-  date?: string;
-  createdAt?: string;
 }
 
-export type TransactionType = 'deposit' | 'withdrawal' | 'trade_profit' | 'trade_loss' | 'trade_pnl';
-export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected' | 'completed' | 'pending' | 'failed';
+export type TransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'trade_pnl' | 'trade_profit';
+export type TransactionStatus = 'pending' | 'completed' | 'rejected' | 'failed' | 'Approved' | 'Pending';
 
 export interface Transaction {
   id: string;
   reference?: string;
-  userId?: string;
   accountId: string;
-  date?: string;
-  timestamp?: string;
+  userId?: string;
   type: TransactionType;
   amount: number;
-  method?: string;
-  accountName?: string;
-  accountNumber?: string;
   status: TransactionStatus;
-  note?: string;
-  description?: string;
+  createdAt: string;
+  timestamp?: string;
+  date?: string;
+  description: string;
+  method?: string;
+  proofUrl?: string;
+}
+
+export interface PriceAlert {
+  id: string;
+  symbol: string;
+  targetPrice: number;
+  condition: 'ABOVE' | 'BELOW';
+  createdAt: string;
+  active: boolean;
 }
 
 export interface Article {
@@ -126,62 +142,14 @@ export interface Article {
   summary: string;
   content: string;
   tags: string[];
+  image?: string;
 }
 
 export interface FAQItem {
   id: string;
   question: string;
   answer: string;
-  category: string;
-}
-
-export interface TicketMessage {
-  id: string;
-  sender: 'user' | 'admin' | string;
-  text: string;
-  timestamp: string;
-  isAdmin?: boolean;
-}
-
-export interface TicketReply {
-  id: string;
-  sender: string;
-  message: string;
-  timestamp: string;
-  isAdmin: boolean;
-}
-
-export interface SupportTicket {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  subject: string;
-  category: string;
-  message?: string;
-  messages?: TicketMessage[];
-  status: 'open' | 'in_progress' | 'resolved' | string;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: string;
-  updatedAt?: string;
-  replies?: TicketReply[];
-}
-
-export interface SiteSettings {
-  websiteName?: string;
-  brandName: string;
-  tagline: string;
-  email: string;
-  phone: string;
-  supportHours: string;
-  riskWarning: string;
-  socialLinks?: {
-    twitter: string;
-    telegram: string;
-    discord: string;
-    youtube: string;
-    linkedin: string;
-  };
+  category: 'General' | 'Account' | 'Accounts' | 'Trading' | 'Funding' | 'Platforms' | 'Deposits & Withdrawals';
 }
 
 export interface EconomicEvent {
@@ -193,4 +161,47 @@ export interface EconomicEvent {
   actual?: string;
   forecast?: string;
   previous?: string;
+}
+
+export interface TicketMessage {
+  id: string;
+  sender: string;
+  message?: string;
+  text?: string;
+  timestamp: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  subject: string;
+  department?: string;
+  category?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  createdAt: string;
+  updatedAt?: string;
+  messages: TicketMessage[];
+}
+
+export interface SiteSettings {
+  brandName: string;
+  websiteName?: string;
+  tagline: string;
+  supportEmail: string;
+  email?: string;
+  supportPhone: string;
+  phone?: string;
+  address: string;
+  supportHours?: string;
+  riskWarning: string;
+  socialLinks: {
+    twitter: string;
+    telegram: string;
+    discord: string;
+    linkedin: string;
+    youtube?: string;
+  };
+  kycRequired: boolean;
 }

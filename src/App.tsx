@@ -31,6 +31,7 @@ import { CookiesPage } from './pages/legal/CookiesPage';
 // Auth Pages
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { AdminLoginPage } from './pages/auth/AdminLoginPage';
 
 // Client Dashboard Pages
 import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage';
@@ -87,6 +88,7 @@ export const App: React.FC = () => {
           {/* Auth Pages within Public Layout */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
 
           {/* 404 Fallback */}
           <Route path="*" element={<NotFoundPage />} />

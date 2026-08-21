@@ -60,9 +60,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ mobileOpen, onCloseM
           <div className="h-16 px-6 flex items-center justify-between border-b border-neutral-800 bg-[#121216]">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-red-500" />
-              <span className="font-bold text-white tracking-wider text-xs uppercase">
-                Admin Console
-              </span>
+              <div className="flex flex-col">
+                <span className="font-black text-white tracking-wider text-xs uppercase leading-tight">
+                  NEXORA <span className="text-red-500">ADMIN</span>
+                </span>
+                <span className="text-[9px] text-neutral-400 font-mono">Control Center</span>
+              </div>
             </div>
             {onCloseMobile && (
               <button

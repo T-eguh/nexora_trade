@@ -81,6 +81,18 @@ export const ArticleDetailPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {article.image && (
+          <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-neutral-800 relative mt-6">
+            <img
+              src={article.image}
+              alt={article.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/70 via-transparent to-transparent" />
+          </div>
+        )}
       </div>
 
       {/* Main Content Body */}
