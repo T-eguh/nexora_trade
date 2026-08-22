@@ -106,7 +106,7 @@ export const INITIAL_TRADING_ACCOUNTS: TradingAccount[] = [
     status: 'active',
     marginUsed: 420.00,
     freeMargin: 10445.75,
-    server: 'Nexora-Live-01',
+    server: 'Nexora-US-Amerikan-Live01',
   },
   {
     id: 'acc-2',
@@ -120,6 +120,6 @@ export const INITIAL_TRADING_ACCOUNTS: TradingAccount[] = [
     status: 'active',
     marginUsed: 0.00,
     freeMargin: 5000.00,
-    server: 'Nexora-ECN-02',
+    server: 'Nexora-US-Amerikan-ECN02',
   },
 ];

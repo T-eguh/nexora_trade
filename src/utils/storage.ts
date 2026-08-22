@@ -168,7 +168,7 @@ export const StorageService = {
       marginUsed: 0,
       margin: 0,
       freeMargin: 10000.0,
-      server: 'Nexora-Live-01',
+      server: 'Nexora-US-Amerikan-Live01',
     };
 
     const accounts = this.getAccounts();
@@ -425,7 +425,7 @@ export const StorageService = {
     return getStoredItem<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
   },
 
-  addTransaction(tx: Omit<Transaction, 'id'>): Transaction {
+  addTransaction(tx: Omit<Transaction, 'id' | 'createdAt'> & { createdAt?: string }): Transaction {
     const newTx: Transaction = {
       ...tx,
       id: `tx-${Date.now()}`,

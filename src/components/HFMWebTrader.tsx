@@ -22,6 +22,7 @@ import {
 import { useMarkets, usePositions, useAccounts, useAuth } from '../hooks/useStorage';
 import { StorageService } from '../utils/storage';
 import { Market, Position, PriceAlert } from '../types';
+import { TradingViewChart } from './TradingViewChart';
 
 export const HFMWebTrader: React.FC = () => {
   const { markets } = useMarkets();
@@ -470,7 +471,7 @@ export const HFMWebTrader: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: INTERACTIVE CHART VIEW matching Video 2 */}
+      {/* TAB 2: INTERACTIVE CHART VIEW */}
       {activeMainTab === 'chart' && (
         <div className="p-3 sm:p-4 space-y-4">
           {/* Symbol Header & Specs */}
@@ -491,19 +492,22 @@ export const HFMWebTrader: React.FC = () => {
                     {selectedLive.change >= 0 ? '+' : ''}
                     {selectedLive.change.toFixed(2)}%
                   </span>
+                  <span className="text-[10px] font-mono bg-neutral-200 text-neutral-700 px-1.5 py-0.5 rounded">
+                    Server: US New York (Amerikan) Live
+                  </span>
                 </div>
                 <span className="text-[11px] text-neutral-500">{selectedMarket.name}</span>
               </div>
             </div>
 
-            {/* Timeframe selector matching video */}
+            {/* Timeframe selector */}
             <div className="flex items-center gap-1 bg-white border border-neutral-300 p-0.5 rounded-lg text-xs font-bold">
-              {(['1m', '5m', '15m', '1h', 'D'] as const).map((tf) => (
+              {(['1m', '5m', '15m', '1h', '4h', '1D'] as const).map((tf) => (
                 <button
                   key={tf}
                   type="button"
-                  onClick={() => setTimeframe(tf)}
-                  className={`px-2 py-1 rounded transition-colors ${
+                  onClick={() => setTimeframe(tf as any)}
+                  className={`px-2.5 py-1 rounded transition-colors ${
                     timeframe === tf ? 'bg-[#1a1c23] text-white' : 'text-neutral-600 hover:bg-neutral-100'
                   }`}
                 >
@@ -513,76 +517,27 @@ export const HFMWebTrader: React.FC = () => {
             </div>
           </div>
 
-          {/* Interactive Simulated Candlestick Chart Canvas */}
-          <div className="relative w-full h-72 sm:h-80 bg-[#151518] rounded-xl border border-neutral-800 overflow-hidden flex flex-col justify-between p-3 select-none">
-            {/* Ask Price Line indicator (green horizontal dashed line) */}
-            <div className="absolute left-0 right-0 top-1/3 border-b border-dashed border-emerald-500 z-10 flex justify-end pr-2 pointer-events-none">
-              <span className="bg-emerald-600 text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
-                Ask: {selectedLive.ask.toFixed(selectedMarket.digits)}
-              </span>
-            </div>
+          {/* TradingView Real-Time Candlestick Chart */}
+          <TradingViewChart
+            symbol={selectedMarket.symbol}
+            theme="dark"
+            interval={timeframe === '1m' ? '1' : timeframe === '5m' ? '5' : timeframe === '15m' ? '15' : timeframe === '1h' ? '60' : timeframe === '4h' ? '240' : 'D'}
+            height={480}
+          />
 
-            {/* Simulated Candlesticks */}
-            <div className="flex-1 flex items-end justify-between gap-1.5 sm:gap-3 px-2 py-6">
-              {[
-                { o: 40, c: 75, h: 85, l: 30, up: true },
-                { o: 75, c: 60, h: 80, l: 55, up: false },
-                { o: 60, c: 90, h: 95, l: 50, up: true },
-                { o: 90, c: 70, h: 95, l: 65, up: false },
-                { o: 70, c: 110, h: 120, l: 60, up: true },
-                { o: 110, c: 95, h: 115, l: 85, up: false },
-                { o: 95, c: 135, h: 140, l: 90, up: true },
-                { o: 135, c: 120, h: 145, l: 110, up: false },
-                { o: 120, c: 160, h: 170, l: 115, up: true },
-                { o: 160, c: 145, h: 165, l: 135, up: false },
-                { o: 145, c: 180, h: 190, l: 140, up: true },
-              ].map((candle, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end relative">
-                  {/* High-Low Wick */}
-                  <div
-                    className={`w-0.5 absolute ${candle.up ? 'bg-emerald-500' : 'bg-red-500'}`}
-                    style={{
-                      bottom: `${(candle.l / 200) * 100}%`,
-                      height: `${((candle.h - candle.l) / 200) * 100}%`,
-                    }}
-                  />
-                  {/* Candle Body */}
-                  <div
-                    className={`w-full max-w-[14px] rounded-xs z-10 ${
-                      candle.up ? 'bg-emerald-500' : 'bg-red-500'
-                    }`}
-                    style={{
-                      height: `${(Math.abs(candle.c - candle.o) / 200) * 100}%`,
-                      marginBottom: `${(Math.min(candle.o, candle.c) / 200) * 100}%`,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom time markers */}
-            <div className="flex justify-between text-[10px] font-mono text-neutral-500 pt-2 border-t border-neutral-800">
-              <span>09:00</span>
-              <span>11:00</span>
-              <span>13:00</span>
-              <span>15:00</span>
-              <span>17:00 (Live)</span>
-            </div>
-          </div>
-
-          {/* Quick Buy/Sell Buttons & Lot size control matching video */}
+          {/* Quick Buy/Sell Buttons & Lot size control */}
           <div className="space-y-3 bg-neutral-50 p-4 rounded-xl border border-neutral-200">
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-xs font-bold text-neutral-700">Volume Lot:</label>
-              <div className="flex items-center gap-2">
-                {['0.01', '0.10', '0.50', '1.00'].map((l) => (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="text-xs font-bold text-neutral-700">Volume Lot (Ukuran Kontrak):</label>
+              <div className="flex items-center gap-1.5">
+                {['0.01', '0.05', '0.10', '0.50', '1.00', '2.00'].map((l) => (
                   <button
                     key={l}
                     type="button"
                     onClick={() => setLotSize(l)}
-                    className={`px-2 py-1 text-xs font-bold rounded border ${
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors ${
                       lotSize === l
-                        ? 'bg-[#1a1c23] text-white border-[#1a1c23]'
+                        ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
                         : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100'
                     }`}
                   >
@@ -597,7 +552,7 @@ export const HFMWebTrader: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleExecuteTrade('SELL')}
-                className="py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-98"
+                className="py-3.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-98"
               >
                 <span className="text-[11px] uppercase tracking-wider font-medium opacity-90">
                   Jual (Sell)
@@ -611,7 +566,7 @@ export const HFMWebTrader: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleExecuteTrade('BUY')}
-                className="py-3 px-4 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white font-bold transition-all shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-98"
+                className="py-3.5 px-4 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white font-bold transition-all shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-98"
               >
                 <span className="text-[11px] uppercase tracking-wider font-medium opacity-90">
                   Beli (Buy)
@@ -630,7 +585,7 @@ export const HFMWebTrader: React.FC = () => {
               <div>• Jam Trading: <strong>24/5 Live</strong></div>
               <div>• Ukuran Pip: <strong>{selectedMarket.pipValue}</strong></div>
               <div>• Spread Tipikal: <strong>{selectedMarket.spread} pips</strong></div>
-              <div>• Leverage: <strong>1:1000</strong></div>
+              <div>• Server: <strong>US New York (Amerikan)</strong></div>
             </div>
           </div>
         </div>

@@ -263,7 +263,7 @@ export const HomePage: React.FC = () => {
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-white font-bold">Nexora WebTrader Live</span>
                 </div>
-                <span className="text-emerald-400 text-[11px]">Server: Jakarta / SG STP</span>
+                <span className="text-emerald-400 text-[11px]">Server: US New York (Amerikan) STP Live</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="p-2 bg-[#181a22] rounded border border-neutral-700">

@@ -33,14 +33,14 @@ export const DashboardOverviewPage: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-              LIVE MT5
+              LIVE MT5 (US AMERIKAN)
             </span>
             <h1 className="text-lg sm:text-xl font-bold text-neutral-900">
               Selamat datang, {user?.name || 'Trader Nexora'}
             </h1>
           </div>
           <p className="text-xs text-neutral-500">
-            Akun Trading: <strong className="text-neutral-800 font-mono">#{primaryAccount?.accountNumber || '205128182'}</strong> • Cent news (1:1000)
+            Akun Trading: <strong className="text-neutral-800 font-mono">#{primaryAccount?.accountNumber || '205128182'}</strong> • Server: <strong className="text-neutral-700">US New York (Amerikan) Live</strong>
           </p>
         </div>
 
@@ -75,21 +75,21 @@ export const DashboardOverviewPage: React.FC = () => {
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs">
           <span className="text-[11px] text-neutral-500 font-medium block">Saldo Akun</span>
           <span className="text-base sm:text-lg font-black text-neutral-900 font-mono">
-            c{balance.toFixed(2)}
+            ${balance.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
           </span>
         </div>
 
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs">
           <span className="text-[11px] text-neutral-500 font-medium block">Total Ekuitas</span>
           <span className="text-base sm:text-lg font-black text-neutral-900 font-mono">
-            c{equity.toFixed(2)}
+            ${equity.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
           </span>
         </div>
 
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs">
           <span className="text-[11px] text-neutral-500 font-medium block">Bebas Margin</span>
           <span className="text-base sm:text-lg font-black text-neutral-900 font-mono">
-            c{freeMargin.toFixed(2)}
+            ${freeMargin.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
           </span>
         </div>
 
@@ -100,7 +100,7 @@ export const DashboardOverviewPage: React.FC = () => {
               totalOpenPnl >= 0 ? 'text-emerald-600' : 'text-red-600'
             }`}
           >
-            {totalOpenPnl >= 0 ? '+' : ''}c{totalOpenPnl.toFixed(2)}
+            {totalOpenPnl >= 0 ? '+' : ''}${totalOpenPnl.toFixed(2)} USD
           </span>
         </div>
       </div>

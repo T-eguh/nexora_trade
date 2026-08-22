@@ -40,7 +40,7 @@ export const TradingAccountsPage: React.FC = () => {
       marginUsed: 0,
       freeMargin: parseFloat(initialDeposit) || 1000,
       leverage: `1:${leverage}`,
-      server: 'Nexora-Live-01',
+      server: 'Nexora-US-Amerikan-Live01',
       status: 'active',
     };
 
