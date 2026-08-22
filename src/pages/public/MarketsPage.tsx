@@ -24,6 +24,10 @@ export const MarketsPage: React.FC = () => {
   const [tradeSuccessMsg, setTradeSuccessMsg] = useState<string | null>(null);
 
   const handleOpenTrade = (market: Market, type: 'BUY' | 'SELL') => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     setTradeModalMarket(market);
     setTradeType(type);
     setTradeSuccessMsg(null);

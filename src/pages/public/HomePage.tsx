@@ -13,8 +13,10 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Wallet,
+  KeyRound,
+  Server,
 } from 'lucide-react';
-import { TradingTerminalMock } from '../../components/TradingTerminalMock';
 import { useMarkets, useFaqs, useArticles } from '../../hooks/useStorage';
 import { ACCOUNT_TIERS } from '../../data/accounts';
 
@@ -24,6 +26,7 @@ export const HomePage: React.FC = () => {
   const { articles } = useArticles();
 
   const tickerMarkets = markets.slice(0, 8);
+  const featuredMarkets = markets.slice(0, 4);
 
   const productCards = [
     {
@@ -126,9 +129,99 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Mock Trading Terminal */}
+          {/* Right Showcase: Client Portal & Secure Terminal Gateway */}
           <div className="lg:col-span-6 w-full">
-            <TradingTerminalMock />
+            <div className="bg-[#101217] border border-neutral-800 rounded-2xl p-5 sm:p-7 shadow-2xl space-y-5 text-left relative overflow-hidden">
+              {/* Top Accent Stripe */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-emerald-500" />
+
+              {/* Portal Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800 flex items-center justify-center text-red-500">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">Portal Klien Resmi Nexora</h3>
+                    <span className="text-[11px] text-neutral-400 font-mono">Server: US New York (Amerikan) Live</span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Sistem Aktif
+                </span>
+              </div>
+
+              {/* Streaming Market Quotes Table Preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-neutral-400 px-1">
+                  <span>Kutipan Pasar Live (STP Feed)</span>
+                  <span>Spread / Perubahan</span>
+                </div>
+                <div className="space-y-1.5">
+                  {featuredMarkets.map((m) => {
+                    const isUp = m.change >= 0;
+                    return (
+                      <div
+                        key={m.id}
+                        className="p-2.5 bg-[#171922] rounded-xl border border-neutral-800/80 flex items-center justify-between text-xs font-mono"
+                      >
+                        <div className="flex items-center gap-2">
+                          <strong className="text-white font-sans">{m.symbol}</strong>
+                          <span className="text-[10px] text-neutral-400 font-sans hidden sm:inline">
+                            {m.category}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-right">
+                          <span className="text-neutral-200 font-bold">
+                            {m.bid.toFixed(m.digits)}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                              isUp
+                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                                : 'bg-red-950/60 text-red-400 border border-red-800/40'
+                            }`}
+                          >
+                            {isUp ? '+' : ''}
+                            {m.change.toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Locked Gateway Notice */}
+              <div className="p-3.5 bg-neutral-900/90 rounded-xl border border-neutral-800 space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Akses Terminal Trading & Charting Khusus Klien</span>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  Platform WebTrader Pro, grafik candlestick live, eksekusi order instan, dan penarikan dana hanya dapat diakses melalui Area Klien terverifikasi setelah pendaftaran dan deposit akun.
+                </p>
+              </div>
+
+              {/* Portal CTA Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Link
+                  to="/register"
+                  className="py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow text-center flex items-center justify-center gap-1.5"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Daftar Akun</span>
+                </Link>
+                <Link
+                  to="/login"
+                  className="py-2.5 px-4 bg-[#1f222b] hover:bg-[#282c37] text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-neutral-700 transition-all text-center flex items-center justify-center gap-1.5"
+                >
+                  <Server className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>Area Klien</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
