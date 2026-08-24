@@ -32,8 +32,8 @@ export const HFMWebTrader: React.FC = () => {
 
   const primaryAccount = accounts.find((a) => a.userId === user?.id) || accounts[0];
 
-  // Main navigation tab
-  const [activeMainTab, setActiveMainTab] = useState<'instruments' | 'chart' | 'trading' | 'alerts'>('instruments');
+  // Main navigation tab - default to 'chart' so it opens instantly on page load
+  const [activeMainTab, setActiveMainTab] = useState<'instruments' | 'chart' | 'trading' | 'alerts'>('chart');
   const [selectedCategory, setSelectedCategory] = useState<string>('Favorit');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedMarket, setSelectedMarket] = useState<Market>(markets[0] || {} as Market);
@@ -57,7 +57,7 @@ export const HFMWebTrader: React.FC = () => {
   const [showInInstFav, setShowInInstFav] = useState(true);
 
   // Trading positions sub-tab
-  const [tradingSubTab, setTradingSubTab] = useState<'open' | 'pending' | 'closed'>('open');
+  const [tradingSubTab, setTradingSubTab] = useState<'open' | 'pending'>('open');
 
   // Alerts
   const [alerts, setAlerts] = useState<PriceAlert[]>(StorageService.getPriceAlerts());
@@ -523,6 +523,9 @@ export const HFMWebTrader: React.FC = () => {
             theme="dark"
             interval={timeframe === '1m' ? '1' : timeframe === '5m' ? '5' : timeframe === '15m' ? '15' : timeframe === '1h' ? '60' : timeframe === '4h' ? '240' : 'D'}
             height={480}
+            currentBid={selectedLive.bid}
+            currentAsk={selectedLive.ask}
+            digits={selectedMarket.digits}
           />
 
           {/* Quick Buy/Sell Buttons & Lot size control */}
@@ -591,10 +594,10 @@ export const HFMWebTrader: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: TRADING (Positions & Orders: Buka, Tertunda, Tutup) */}
+      {/* TAB 3: TRADING (Positions: Buka, Tertunda) */}
       {activeMainTab === 'trading' && (
         <div className="p-3 sm:p-4 space-y-4">
-          {/* Sub-tabs: Buka / Tertunda / Tutup matching video */}
+          {/* Sub-tabs: Buka / Tertunda */}
           <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
             <div className="flex items-center gap-1.5">
               <button
@@ -606,7 +609,7 @@ export const HFMWebTrader: React.FC = () => {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
-                Buka ({openPositions.length})
+                Posisi Terbuka ({openPositions.length})
               </button>
 
               <button
@@ -618,19 +621,7 @@ export const HFMWebTrader: React.FC = () => {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
-                Tertunda (0)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTradingSubTab('closed')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  tradingSubTab === 'closed'
-                    ? 'bg-neutral-900 text-white'
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-              >
-                Tutup ({closedPositions.length})
+                Order Tertunda (0)
               </button>
             </div>
 
@@ -710,40 +701,6 @@ export const HFMWebTrader: React.FC = () => {
           {tradingSubTab === 'pending' && (
             <div className="py-12 text-center text-xs text-neutral-500">
               Tidak ada order tertunda (Pending Limit / Stop).
-            </div>
-          )}
-
-          {/* Closed Orders History */}
-          {tradingSubTab === 'closed' && (
-            <div className="space-y-2">
-              {closedPositions.length === 0 ? (
-                <div className="py-12 text-center text-xs text-neutral-500">
-                  Belum ada riwayat transaksi yang ditutup.
-                </div>
-              ) : (
-                closedPositions.map((pos) => (
-                  <div
-                    key={pos.id}
-                    className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <strong className="font-bold text-neutral-900 font-mono">
-                        {pos.symbol} ({pos.type})
-                      </strong>
-                      <span className="text-[11px] text-neutral-500 block">
-                        Volume: {pos.volume} lot • Tutup: {pos.closePrice?.toFixed(4) || pos.currentPrice.toFixed(4)}
-                      </span>
-                    </div>
-                    <span
-                      className={`font-bold font-mono ${
-                        pos.pnl >= 0 ? 'text-emerald-600' : 'text-red-600'
-                      }`}
-                    >
-                      {pos.pnl >= 0 ? '+' : ''}${pos.pnl.toFixed(2)}
-                    </span>
-                  </div>
-                ))
-              )}
             </div>
           )}
         </div>

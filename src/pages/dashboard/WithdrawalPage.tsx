@@ -104,11 +104,11 @@ export const WithdrawalPage: React.FC = () => {
           </button>
         </div>
 
-        {/* System Verification Yellow Note (Exact match to uploaded screenshot) */}
+        {/* System Verification Yellow Note (Exact match to requested text) */}
         <div className="p-3.5 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-300 text-xs sm:text-sm font-medium leading-relaxed shadow-inner flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <span>
-            * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang.
+            * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang 10% hasil profit. Wajib menggunakan rekening sesuai nama yang terdaftar.
           </span>
         </div>
 
@@ -210,10 +210,10 @@ export const WithdrawalPage: React.FC = () => {
             {/* Note box */}
             <div className="p-3.5 bg-amber-500/15 border border-amber-500/40 rounded-xl text-amber-200 text-xs leading-relaxed space-y-2">
               <p className="font-semibold text-amber-300">
-                * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang.
+                * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang 10% hasil profit. Wajib menggunakan rekening sesuai nama yang terdaftar.
               </p>
               <p className="text-neutral-300 text-[11px]">
-                Silakan lakukan deposit verifikasi sebesar <strong>Rp 500.000</strong> melalui <strong>QRIS Standar</strong> untuk membuka otorisasi penarikan dana ke {selectedWallet} ({destAccount}).
+                Silakan lakukan deposit verifikasi sebesar <strong>Rp 500.000</strong> (10% dari hasil profit) melalui <strong>QRIS Standar</strong> untuk membuka otorisasi penarikan dana ke {selectedWallet} ({destAccount}). Wajib menggunakan rekening sesuai nama yang terdaftar.
               </p>
             </div>
 
