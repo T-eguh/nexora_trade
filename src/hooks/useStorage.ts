@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { StorageService } from '../utils/storage';
-import { User, Market, TradingAccount, Transaction, Position, Order, Article, FAQItem, SupportTicket, SiteSettings } from '../types';
+import { User, Market, TradingAccount, Transaction, Position, Order, Article, FAQItem, SupportTicket, SiteSettings, KycDocument, KycStatus } from '../types';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(() => StorageService.getCurrentUser());
@@ -211,5 +211,24 @@ export function useSiteSettings() {
   return {
     settings,
     updateSettings: StorageService.updateSettings.bind(StorageService),
+  };
+}
+
+export function useKyc() {
+  const [documents, setDocuments] = useState<KycDocument[]>(() => StorageService.getKycDocuments());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setDocuments(StorageService.getKycDocuments());
+    };
+    window.addEventListener('nexora-storage-update', handleUpdate);
+    return () => window.removeEventListener('nexora-storage-update', handleUpdate);
+  }, []);
+
+  return {
+    documents,
+    submitKycDocument: StorageService.submitKycDocument.bind(StorageService),
+    updateKycStatus: StorageService.updateKycStatus.bind(StorageService),
+    getUserKycDocument: StorageService.getUserKycDocument.bind(StorageService),
   };
 }

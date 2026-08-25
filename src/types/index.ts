@@ -4,6 +4,22 @@ export type AccountTierType = 'Starter' | 'Pro' | 'Zero' | 'Premium';
 export type AccountType = AccountTierType;
 export type AccountStatus = 'active' | 'suspended';
 
+export type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
+
+export interface KycDocument {
+  id: string;
+  userId: string;
+  fullName: string;
+  nik: string; // Nomor Induk Kependudukan (NIK KTP)
+  birthDate?: string;
+  address?: string;
+  ktpImageUrl: string; // Base64 or image URL
+  uploadedAt: string;
+  status: KycStatus;
+  rejectionReason?: string;
+  verifiedAt?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -16,6 +32,11 @@ export interface User {
   password?: string;
   accountTier?: AccountTierType;
   twoFactorEnabled?: boolean;
+  kycStatus?: KycStatus;
+  nik?: string;
+  ktpImageUrl?: string;
+  kycSubmittedAt?: string;
+  kycRejectionReason?: string;
 }
 
 export interface TradingAccount {

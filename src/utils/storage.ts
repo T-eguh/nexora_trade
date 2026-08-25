@@ -13,6 +13,8 @@ import {
   AccountTierType,
   PriceAlert,
   SupportTicket,
+  KycDocument,
+  KycStatus,
 } from '../types';
 import { INITIAL_USERS } from '../data/users';
 import { INITIAL_TRADING_ACCOUNTS } from '../data/accounts';
@@ -35,6 +37,7 @@ const STORAGE_KEYS = {
   TICKETS: 'nexora_tickets',
   SETTINGS: 'nexora_settings',
   ALERTS: 'nexora_price_alerts',
+  KYC_DOCUMENTS: 'nexora_kyc_documents',
 };
 
 // Safe JSON storage helper
@@ -52,7 +55,9 @@ function getStoredItem<T>(key: string, defaultValue: T): T {
 function setStoredItem<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    window.dispatchEvent(new Event('nexora-storage-update'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('nexora-storage-update'));
+    }, 0);
   } catch (e) {
     console.error(`Error saving ${key} to storage:`, e);
   }
@@ -69,7 +74,9 @@ export const StorageService = {
       setStoredItem(STORAGE_KEYS.AUTH_USER, user);
     } else {
       localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-      window.dispatchEvent(new Event('nexora-storage-update'));
+      setTimeout(() => {
+        window.dispatchEvent(new Event('nexora-storage-update'));
+      }, 0);
     }
   },
 
@@ -160,14 +167,14 @@ export const StorageService = {
       userId: newUser.id,
       type: userData.accountTier || 'Pro',
       tier: userData.accountTier || 'Pro',
-      balance: 10000.0,
-      equity: 10000.0,
-      leverage: '1:1000',
+      balance: 0.0,
+      equity: 0.0,
+      leverage: '1:500',
       currency: 'USD',
       status: 'active',
       marginUsed: 0,
       margin: 0,
-      freeMargin: 10000.0,
+      freeMargin: 0.0,
       server: 'Nexora-US-Amerikan-Live01',
     };
 
@@ -211,6 +218,74 @@ export const StorageService = {
   deleteUser(userId: string): void {
     const users = this.getUsers().filter((u) => u.id !== userId);
     setStoredItem(STORAGE_KEYS.USERS, users);
+  },
+
+  // --- KYC / DOCUMENT VERIFICATION ---
+  getKycDocuments(): KycDocument[] {
+    return getStoredItem<KycDocument[]>(STORAGE_KEYS.KYC_DOCUMENTS, []);
+  },
+
+  getUserKycDocument(userId: string): KycDocument | undefined {
+    const docs = this.getKycDocuments();
+    return docs.find((d) => d.userId === userId);
+  },
+
+  submitKycDocument(data: {
+    userId: string;
+    fullName: string;
+    nik: string;
+    birthDate?: string;
+    address?: string;
+    ktpImageUrl: string;
+  }): KycDocument {
+    const docs = this.getKycDocuments().filter((d) => d.userId !== data.userId);
+    const newDoc: KycDocument = {
+      id: `kyc-${Date.now()}`,
+      userId: data.userId,
+      fullName: data.fullName,
+      nik: data.nik,
+      birthDate: data.birthDate,
+      address: data.address,
+      ktpImageUrl: data.ktpImageUrl,
+      uploadedAt: new Date().toISOString(),
+      status: 'pending',
+    };
+
+    setStoredItem(STORAGE_KEYS.KYC_DOCUMENTS, [newDoc, ...docs]);
+
+    // Update user profile status
+    this.updateUser(data.userId, {
+      kycStatus: 'pending',
+      nik: data.nik,
+      ktpImageUrl: data.ktpImageUrl,
+      kycSubmittedAt: newDoc.uploadedAt,
+    });
+
+    return newDoc;
+  },
+
+  updateKycStatus(docId: string, status: KycStatus, rejectionReason?: string): void {
+    const docs = this.getKycDocuments();
+    const doc = docs.find((d) => d.id === docId);
+    if (!doc) return;
+
+    const updatedDocs = docs.map((d) =>
+      d.id === docId
+        ? {
+            ...d,
+            status,
+            rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+            verifiedAt: status === 'verified' ? new Date().toISOString() : undefined,
+          }
+        : d
+    );
+    setStoredItem(STORAGE_KEYS.KYC_DOCUMENTS, updatedDocs);
+
+    // Update corresponding user record
+    this.updateUser(doc.userId, {
+      kycStatus: status,
+      kycRejectionReason: status === 'rejected' ? rejectionReason : undefined,
+    });
   },
 
   // --- ACCOUNTS ---
@@ -260,6 +335,7 @@ export const StorageService = {
   },
 
   // --- DEPOSIT & WITHDRAW ---
+  // Direct deposit helper (for admin or automated test)
   deposit(accountId: string, amount: number, note?: string): void {
     const accounts = this.getAccounts();
     const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId) || accounts[0];
@@ -280,8 +356,31 @@ export const StorageService = {
         status: 'completed',
         createdAt: new Date().toISOString(),
         description: note || 'Setoran Instan Indonesia',
+        reference: `DEP-${Date.now().toString().slice(-8)}`,
       });
     }
+  },
+
+  // User submits a deposit payment request (Pending admin confirmation)
+  requestDeposit(accountId: string, amountUsd: number, amountIdr: number, note?: string): Transaction {
+    const accounts = this.getAccounts();
+    const acc = accounts.find((a) => a.id === accountId || a.accountId === accountId || a.accountNumber === accountId) || accounts[0];
+    const accNum = acc ? (acc.accountNumber || acc.accountId) : accountId;
+
+    const newTx: Transaction = {
+      id: `tx-${Date.now()}`,
+      accountId: accNum,
+      type: 'deposit',
+      amount: amountUsd,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      description: note || `Setoran QRIS Rp ${amountIdr.toLocaleString('id-ID')} (Menunggu Konfirmasi Admin)`,
+      reference: `QRIS-${Date.now().toString().slice(-8)}`,
+    };
+
+    const txs = this.getTransactions();
+    setStoredItem(STORAGE_KEYS.TRANSACTIONS, [newTx, ...txs]);
+    return newTx;
   },
 
   withdraw(accountId: string, amount: number, note?: string): void {
@@ -304,6 +403,7 @@ export const StorageService = {
         status: 'completed',
         createdAt: new Date().toISOString(),
         description: note || 'Penarikan Dana Indonesia',
+        reference: `WD-${Date.now().toString().slice(-8)}`,
       });
     }
   },
@@ -342,13 +442,27 @@ export const StorageService = {
 
   // --- POSITIONS ---
   getPositions(): Position[] {
-    return getStoredItem<Position[]>(STORAGE_KEYS.POSITIONS, INITIAL_POSITIONS);
+    const raw = getStoredItem<Position[]>(STORAGE_KEYS.POSITIONS, INITIAL_POSITIONS);
+    // Sanitize any legacy mock positions
+    const valid = raw.filter(
+      (p) =>
+        p &&
+        p.id &&
+        !['pos-1', 'pos-2', 'pos-3', 'pos-4', 'pos-5'].includes(p.id) &&
+        !p.id.startsWith('dummy-')
+    );
+    if (valid.length !== raw.length) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.POSITIONS, JSON.stringify(valid));
+      } catch (e) {}
+    }
+    return valid;
   },
 
   addPosition(position: Omit<Position, 'id' | 'openTime'>): Position {
     const newPos: Position = {
       ...position,
-      id: `pos-${Date.now()}`,
+      id: `pos-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       openTime: new Date().toISOString(),
     };
     const positions = this.getPositions();
@@ -359,6 +473,15 @@ export const StorageService = {
   updatePosition(positionId: string, data: Partial<Position>): void {
     const positions = this.getPositions().map((p) => (p.id === positionId ? { ...p, ...data } : p));
     setStoredItem(STORAGE_KEYS.POSITIONS, positions);
+  },
+
+  deletePosition(positionId: string): void {
+    const positions = this.getPositions().filter((p) => p.id !== positionId);
+    setStoredItem(STORAGE_KEYS.POSITIONS, positions);
+  },
+
+  clearAllPositions(): void {
+    setStoredItem(STORAGE_KEYS.POSITIONS, []);
   },
 
   closePosition(positionId: string): void {
@@ -438,8 +561,41 @@ export const StorageService = {
   },
 
   updateTransactionStatus(txId: string, status: TransactionStatus): void {
-    const txs = this.getTransactions().map((t) => (t.id === txId ? { ...t, status } : t));
-    setStoredItem(STORAGE_KEYS.TRANSACTIONS, txs);
+    const txs = this.getTransactions();
+    const targetTx = txs.find((t) => t.id === txId);
+    if (!targetTx) return;
+
+    const previousStatus = targetTx.status;
+    const isNowApproved = status === 'completed' || status === 'Approved';
+    const wasPending = previousStatus === 'pending' || previousStatus === 'Pending';
+
+    // If admin is approving a pending deposit, credit the balance to user's trading account
+    if (isNowApproved && wasPending && targetTx.type === 'deposit') {
+      const accounts = this.getAccounts();
+      const acc =
+        accounts.find(
+          (a) =>
+            a.accountNumber === targetTx.accountId ||
+            a.accountId === targetTx.accountId ||
+            a.id === targetTx.accountId
+        ) || accounts[0];
+
+      if (acc) {
+        const depositAmount = Math.abs(targetTx.amount);
+        const newBal = acc.balance + depositAmount;
+        const newEq = acc.equity + depositAmount;
+        const newFree = acc.freeMargin + depositAmount;
+
+        this.updateAccount(acc.id, {
+          balance: newBal,
+          equity: newEq,
+          freeMargin: newFree,
+        });
+      }
+    }
+
+    const updated = txs.map((t) => (t.id === txId ? { ...t, status } : t));
+    setStoredItem(STORAGE_KEYS.TRANSACTIONS, updated);
   },
 
   // --- PRICE ALERTS ---

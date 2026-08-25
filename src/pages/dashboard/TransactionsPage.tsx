@@ -124,8 +124,20 @@ export const TransactionsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-3">
-                        <span className="bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                          {tx.status === 'completed' ? 'SUKSES' : tx.status.toUpperCase()}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            tx.status === 'completed'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : tx.status === 'pending' || tx.status === 'Pending'
+                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {tx.status === 'completed'
+                            ? 'BERHASIL'
+                            : tx.status === 'pending' || tx.status === 'Pending'
+                            ? 'MENUNGGU KONFIRMASI'
+                            : 'DITOLAK'}
                         </span>
                       </td>
                       <td className="py-3 px-3.5 text-neutral-600 text-[11px] max-w-xs truncate">

@@ -31,7 +31,7 @@ export const DashboardLayout: React.FC = () => {
   const openPositions = positions.filter((p) => p.status === 'open');
   const totalOpenPnl = openPositions.reduce((acc, p) => acc + p.pnl, 0);
 
-  const balance = primaryAccount?.balance || 0.68;
+  const balance = primaryAccount?.balance ?? 0.0;
   const equity = balance + totalOpenPnl;
   const marginUsed = primaryAccount?.margin || 0.0;
   const freeMargin = Math.max(0, equity - marginUsed);

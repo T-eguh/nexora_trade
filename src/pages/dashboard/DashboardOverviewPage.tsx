@@ -21,13 +21,44 @@ export const DashboardOverviewPage: React.FC = () => {
   const openPositions = positions.filter((p) => p.status === 'open');
   const totalOpenPnl = openPositions.reduce((acc, p) => acc + p.pnl, 0);
 
-  const balance = primaryAccount?.balance || 0.68;
+  const balance = primaryAccount?.balance ?? 0.0;
   const equity = balance + totalOpenPnl;
   const marginUsed = primaryAccount?.margin || 0.0;
   const freeMargin = Math.max(0, equity - marginUsed);
 
+  const kycStatus = user?.kycStatus || 'unverified';
+
   return (
     <div className="space-y-5 font-sans">
+      {/* KYC Reminder Banner if not verified */}
+      {kycStatus !== 'verified' && (
+        <div className="p-3.5 bg-neutral-900 text-white rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm border border-neutral-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white shrink-0 font-bold">
+              !
+            </div>
+            <div>
+              <strong className="text-xs font-bold block">
+                {kycStatus === 'pending'
+                  ? 'Dokumen KTP Anda Sedang Ditinjau Admin'
+                  : 'Verifikasi Akun: Upload Foto KTP Anda'}
+              </strong>
+              <p className="text-[11px] text-neutral-300">
+                {kycStatus === 'pending'
+                  ? 'Admin sedang memverifikasi foto KTP yang Anda kirim. Mohon tunggu proses aktivasi penuh.'
+                  : 'Cukup isi form dokumen dan unggah foto KTP asli Anda tanpa scan wajah rumit.'}
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/verification"
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-colors whitespace-nowrap self-start sm:self-center"
+          >
+            {kycStatus === 'pending' ? 'Cek Status KTP' : 'Upload Foto KTP Sekarang'}
+          </Link>
+        </div>
+      )}
+
       {/* Account Overview Header */}
       <div className="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">

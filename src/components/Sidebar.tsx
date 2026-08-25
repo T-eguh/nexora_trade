@@ -13,6 +13,7 @@ import {
   LogOut,
   X,
   Globe,
+  FileCheck2,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useStorage';
 
@@ -27,13 +28,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
 
   const navItems = [
     { to: '/dashboard', label: 'Beranda', icon: Home, end: true },
+    { to: '/dashboard/verification', label: 'Verifikasi KTP', icon: FileCheck2 },
     { to: '/dashboard/deposit', label: 'Setoran (Deposit)', icon: ArrowDownCircle },
     { to: '/dashboard/withdrawal', label: 'Penarikan Dana', icon: ArrowUpCircle },
     { to: '/dashboard/transactions', label: 'Riwayat Transaksi', icon: Repeat },
     { to: '/dashboard/accounts', label: 'Dompet & Akun', icon: Wallet },
     { to: '/dashboard/markets', label: 'Nexora WebTrader', icon: LineChart },
-    { to: '/dashboard/positions', label: 'Posisi Terbuka', icon: UserCheck },
-    { to: '/dashboard/orders', label: 'Order Tertunda', icon: LineChart },
     { to: '/dashboard/support', label: 'Bantuan & Tiket', icon: Users },
   ];
 
@@ -41,6 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
     logout();
     navigate('/login');
   };
+
+  const kycStatus = user?.kycStatus || 'unverified';
 
   return (
     <>
@@ -101,9 +103,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
             </div>
 
             <div className="pt-2 border-t border-neutral-200 flex items-center justify-between text-[11px]">
-              <span className="text-neutral-500">Status Akun:</span>
-              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">
-                LIVE TERVERIFIKASI
+              <span className="text-neutral-500">Status KTP:</span>
+              <span
+                className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+                  kycStatus === 'verified'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : kycStatus === 'pending'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-neutral-100 text-neutral-600'
+                }`}
+              >
+                {kycStatus === 'verified'
+                  ? 'KTP TERVERIFIKASI'
+                  : kycStatus === 'pending'
+                  ? 'MENUNGGU APPROVAL'
+                  : 'BELUM UPLOAD KTP'}
               </span>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
@@ -6,15 +7,18 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useAuth } from '../../hooks/useStorage';
 import { StorageService } from '../../utils/storage';
-import { User, Mail, Phone, Globe, Shield, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Phone, Globe, Shield, CheckCircle2, FileText, ArrowRight, Clock, AlertCircle } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [country, setCountry] = useState(user?.country || 'United States');
+  const [country, setCountry] = useState(user?.country || 'Indonesia');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const kycStatus = user?.kycStatus || 'unverified';
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,16 +30,16 @@ export const ProfilePage: React.FC = () => {
       country,
     });
 
-    setSuccessMsg('Personal profile information saved successfully.');
+    setSuccessMsg('Informasi profil berhasil diperbarui.');
     setTimeout(() => setSuccessMsg(null), 2500);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Client Profile</h1>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Profil Pengguna & Status KYC</h1>
         <p className="text-xs text-neutral-400">
-          Manage your personal contact details, residential country, and account preferences.
+          Kelola rincian kontak pribadi, negara domisili, dan status kelengkapan dokumen identitas KTP.
         </p>
       </div>
 
@@ -50,15 +54,46 @@ export const ProfilePage: React.FC = () => {
               <h3 className="text-base font-bold text-white">{user?.name}</h3>
               <p className="text-xs text-neutral-400 font-mono-num">{user?.email}</p>
             </div>
-            <div className="flex justify-center gap-2 pt-1">
+            <div className="flex justify-center flex-wrap gap-1.5 pt-1">
               <Badge variant="red" size="sm">
                 {user?.role.toUpperCase()}
               </Badge>
-              <Badge variant="success" size="sm">
-                LIVE TERVERIFIKASI
+              <Badge
+                variant={
+                  kycStatus === 'verified'
+                    ? 'success'
+                    : kycStatus === 'pending'
+                    ? 'warning'
+                    : 'danger'
+                }
+                size="sm"
+              >
+                {kycStatus === 'verified'
+                  ? 'KTP TERVERIFIKASI'
+                  : kycStatus === 'pending'
+                  ? 'KTP MENUNGGU APPROVAL'
+                  : 'KTP BELUM DIUPLOAD'}
               </Badge>
             </div>
           </Card>
+
+          {/* Quick KYC Box */}
+          <div className="p-4 bg-[#14151b] border border-neutral-800 rounded-2xl space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-white font-bold">
+              <FileText className="w-4 h-4 text-red-500" />
+              <span>Verifikasi Dokumen KTP</span>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Upload foto KTP Anda melalui form dokumen sederhana tanpa verifikasi scan wajah rumit.
+            </p>
+            <Link
+              to="/dashboard/verification"
+              className="w-full py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow"
+            >
+              <span>{kycStatus === 'verified' ? 'Lihat Dokumen KTP' : 'Buka Form Upload KTP'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Update Form */}
@@ -73,7 +108,7 @@ export const ProfilePage: React.FC = () => {
 
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <Input
-                label="Full Legal Name"
+                label="Nama Lengkap (Sesuai KTP)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 leftIcon={<User className="w-4 h-4 text-neutral-400" />}
@@ -81,40 +116,40 @@ export const ProfilePage: React.FC = () => {
               />
 
               <Input
-                label="Registered Email (Immutable)"
+                label="Alamat Email Terdaftar"
                 value={user?.email || ''}
                 disabled
                 leftIcon={<Mail className="w-4 h-4 text-neutral-400" />}
-                helperText="Email changes require security validation."
+                helperText="Email utama akun tidak dapat diubah sembarangan demi keamanan."
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Contact Phone"
+                  label="Nomor WhatsApp / Telepon"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   leftIcon={<Phone className="w-4 h-4 text-neutral-400" />}
                 />
 
                 <Select
-                  label="Country of Residence"
+                  label="Negara Domisili"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   options={[
+                    { value: 'Indonesia', label: 'Indonesia' },
+                    { value: 'Singapore', label: 'Singapore' },
+                    { value: 'Malaysia', label: 'Malaysia' },
                     { value: 'United States', label: 'United States' },
                     { value: 'United Kingdom', label: 'United Kingdom' },
-                    { value: 'Singapore', label: 'Singapore' },
                     { value: 'Australia', label: 'Australia' },
                     { value: 'Germany', label: 'Germany' },
-                    { value: 'Indonesia', label: 'Indonesia' },
-                    { value: 'United Arab Emirates', label: 'United Arab Emirates' },
                   ]}
                 />
               </div>
 
               <div className="pt-2">
                 <Button type="submit" size="md">
-                  Save Changes
+                  Simpan Perubahan
                 </Button>
               </div>
             </form>

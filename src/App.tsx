@@ -45,6 +45,7 @@ import { TransactionsPage } from './pages/dashboard/TransactionsPage';
 import { ProfilePage } from './pages/dashboard/ProfilePage';
 import { SecurityPage } from './pages/dashboard/SecurityPage';
 import { SupportPage } from './pages/dashboard/SupportPage';
+import { VerificationPage } from './pages/dashboard/VerificationPage';
 
 // Admin Portal Pages
 import { AdminOverviewPage } from './pages/admin/AdminOverviewPage';
@@ -112,6 +113,7 @@ export const App: React.FC = () => {
           <Route path="withdrawal" element={<WithdrawalPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="verification" element={<VerificationPage />} />
           <Route path="security" element={<SecurityPage />} />
           <Route path="support" element={<SupportPage />} />
         </Route>

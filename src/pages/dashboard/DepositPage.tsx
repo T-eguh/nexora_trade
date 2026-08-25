@@ -18,6 +18,7 @@ import {
   Wallet,
   AlertTriangle,
   X,
+  Hourglass,
 } from 'lucide-react';
 
 export const DepositPage: React.FC = () => {
@@ -27,14 +28,14 @@ export const DepositPage: React.FC = () => {
 
   const primaryAccount = accounts.find((a) => a.userId === user?.id) || accounts[0];
 
-  // Steps: 'input' -> 'qris' -> 'success'
-  const [step, setStep] = useState<'input' | 'qris' | 'success'>('input');
-  const [amountInput, setAmountInput] = useState<string>('500000');
-  const [confirmedAmount, setConfirmedAmount] = useState<number>(500000);
+  // Steps: 'input' -> 'qris' -> 'pending_confirmation'
+  const [step, setStep] = useState<'input' | 'qris' | 'pending_confirmation'>('input');
+  const [amountInput, setAmountInput] = useState<string>('250000');
+  const [confirmedAmount, setConfirmedAmount] = useState<number>(250000);
   const [showMinDepositModal, setShowMinDepositModal] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [successReceipt, setSuccessReceipt] = useState<{
+  const [depositTicket, setDepositTicket] = useState<{
     ref: string;
     amountIdr: number;
     amountUsd: string;
@@ -77,8 +78,8 @@ export const DepositPage: React.FC = () => {
     e.preventDefault();
     const val = parseInt(amountInput.replace(/\D/g, ''), 10) || 0;
 
-    // Check minimum deposit requirement (500,000 IDR)
-    if (val < 500000) {
+    // Check minimum deposit requirement (250,000 IDR)
+    if (val < 250000) {
       setShowMinDepositModal(true);
       return;
     }
@@ -87,9 +88,9 @@ export const DepositPage: React.FC = () => {
     setStep('qris');
   };
 
-  const handleSetExact500k = () => {
-    setAmountInput('500000');
-    setConfirmedAmount(500000);
+  const handleSetExact250k = () => {
+    setAmountInput('250000');
+    setConfirmedAmount(250000);
     setShowMinDepositModal(false);
     setStep('qris');
   };
@@ -97,23 +98,25 @@ export const DepositPage: React.FC = () => {
   const handleConfirmQrisPayment = () => {
     setLoading(true);
     setTimeout(() => {
-      // Add balance in USD
-      StorageService.deposit(
-        primaryAccount?.id || 'acc-1',
+      // Create pending deposit request that awaits Admin confirmation
+      const targetAccId = primaryAccount?.accountNumber || primaryAccount?.id || '205128182';
+      const tx = StorageService.requestDeposit(
+        targetAccId,
         parseFloat(confirmedUsd),
-        `Setoran QRIS Instant Pay (Rp ${confirmedAmount.toLocaleString('id-ID')})`
+        confirmedAmount,
+        `Setoran QRIS Rp ${confirmedAmount.toLocaleString('id-ID')} (Menunggu Konfirmasi Admin)`
       );
 
       setLoading(false);
-      setSuccessReceipt({
-        ref: `QRIS-${Date.now().toString().slice(-8)}`,
+      setDepositTicket({
+        ref: tx.reference || `QRIS-${Date.now().toString().slice(-8)}`,
         amountIdr: confirmedAmount,
         amountUsd: confirmedUsd,
         date: new Date().toLocaleString('id-ID'),
         accountNum: primaryAccount?.accountNumber || '205128182',
       });
-      setStep('success');
-    }, 900);
+      setStep('pending_confirmation');
+    }, 800);
   };
 
   return (
@@ -130,7 +133,7 @@ export const DepositPage: React.FC = () => {
           Setoran Dana (Deposit)
         </h1>
         <p className="text-xs text-neutral-500">
-          Deposit saldo trading Anda secara instan menggunakan QRIS Standar Bank Indonesia. Saldo akan otomatis terkonversi dan dikreditkan dalam mata uang <strong>USD ($)</strong>.
+          Deposit saldo trading Anda menggunakan QRIS Standar Bank Indonesia. Setelah konfirmasi admin, saldo otomatis terkonversi dan dikreditkan dalam mata uang <strong>USD ($)</strong>.
         </p>
       </div>
 
@@ -154,7 +157,7 @@ export const DepositPage: React.FC = () => {
                     required
                     value={amountInput}
                     onChange={(e) => setAmountInput(e.target.value)}
-                    placeholder="Contoh: 500000"
+                    placeholder="Contoh: 250000"
                     className="w-full pl-12 pr-28 py-3.5 rounded-xl border border-neutral-300 font-mono font-bold text-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all shadow-xs"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-mono font-bold">
@@ -162,10 +165,10 @@ export const DepositPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Keterangan Minimal 500ribu */}
+                {/* Keterangan Minimal 250ribu */}
                 <div className="flex items-center gap-1.5 text-xs text-amber-700 font-semibold bg-amber-50 p-2.5 rounded-lg border border-amber-200">
                   <Info className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span>* Keterangan: Minimal deposit adalah Rp 500.000</span>
+                  <span>* Keterangan: Minimal deposit adalah Rp 250.000</span>
                 </div>
               </div>
 
@@ -174,13 +177,13 @@ export const DepositPage: React.FC = () => {
                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
                   Pilihan Nominal Cepat:
                 </span>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                  {[500000, 1000000, 2500000, 5000000, 10000000].map((amt) => (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {[250000, 500000, 1000000, 2500000, 5000000, 10000000].map((amt) => (
                     <button
                       key={amt}
                       type="button"
                       onClick={() => setAmountInput(amt.toString())}
-                      className={`py-2 px-2 text-xs font-bold font-mono rounded-xl border transition-all cursor-pointer text-center ${
+                      className={`py-2 px-1 text-xs font-bold font-mono rounded-xl border transition-all cursor-pointer text-center ${
                         parsedAmount === amt
                           ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
                           : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200'
@@ -206,7 +209,7 @@ export const DepositPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <strong className="text-sm font-bold text-neutral-900">QRIS Instant Pay</strong>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          Otomatis
+                          Terverifikasi
                         </span>
                       </div>
                       <p className="text-[11px] text-neutral-500 mt-0.5">
@@ -259,13 +262,13 @@ export const DepositPage: React.FC = () => {
                   <strong className="text-neutral-700 font-mono">1 USD = Rp 16.000</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Server:</span>
-                  <strong className="text-neutral-800 font-mono text-[11px]">US New York Live</strong>
+                  <span className="text-neutral-500">Verifikasi:</span>
+                  <strong className="text-amber-700 font-semibold">Admin Approval</strong>
                 </div>
               </div>
 
               <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 text-[11px] text-neutral-600 leading-relaxed">
-                Deposit diproses secara instan 24/7. Saldo langsung siap digunakan untuk trading di WebTrader.
+                Deposit diverifikasi 24/7. Setelah pembayaran dikonfirmasi admin, saldo otomatis siap ditradingkan di terminal WebTrader.
               </div>
             </div>
           </div>
@@ -459,9 +462,9 @@ export const DepositPage: React.FC = () => {
                   <strong className="text-neutral-900 font-mono">USD ($)</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">Server Trading:</span>
-                  <strong className="text-neutral-800 font-mono text-[11px]">
-                    US New York (Amerikan) Live
+                  <span className="text-neutral-500">Status Validasi:</span>
+                  <strong className="text-amber-700 font-semibold">
+                    Verifikasi Admin Keuangan
                   </strong>
                 </div>
               </div>
@@ -475,7 +478,7 @@ export const DepositPage: React.FC = () => {
                   <li>Buka aplikasi m-Banking (BCA, Mandiri, BRI, BNI) atau E-Wallet (DANA, OVO, GoPay, ShopeePay).</li>
                   <li>Pilih menu <strong>Pindai / Scan QRIS</strong>.</li>
                   <li>Arahkan kamera ke barcode QRIS di samping dan pastikan nominal sesuai <strong>Rp {confirmedAmount.toLocaleString('id-ID')}</strong>.</li>
-                  <li>Setelah pembayaran berhasil, klik tombol di bawah untuk verifikasi instan.</li>
+                  <li>Setelah transfer berhasil, klik tombol di bawah untuk mengajukan konfirmasi verifikasi admin.</li>
                 </ol>
               </div>
 
@@ -487,7 +490,7 @@ export const DepositPage: React.FC = () => {
                 className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  <span>Memverifikasi Penerimaan QRIS...</span>
+                  <span>Mengirim Permintaan ke Admin...</span>
                 ) : (
                   <>
                     <Zap className="w-4 h-4 fill-white" />
@@ -500,24 +503,28 @@ export const DepositPage: React.FC = () => {
         </div>
       )}
 
-      {/* STEP 3: SUCCESS RECEIPT */}
-      {step === 'success' && successReceipt && (
+      {/* STEP 3: PENDING ADMIN CONFIRMATION */}
+      {step === 'pending_confirmation' && depositTicket && (
         <div className="bg-white rounded-2xl p-6 sm:p-8 border border-neutral-200 shadow-sm text-center space-y-6 animate-fadeIn">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-9 h-9" />
+          <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-inner">
+            <Hourglass className="w-8 h-8 animate-spin" />
           </div>
 
-          <div className="space-y-1">
-            <h3 className="text-xl font-bold text-neutral-900">Pembayaran QRIS Terverifikasi!</h3>
-            <p className="text-xs text-neutral-500 max-w-md mx-auto">
-              Setoran sebesar <strong>Rp {successReceipt.amountIdr.toLocaleString('id-ID')}</strong> telah berhasil dikreditkan ke saldo akun trading Anda dalam mata uang <strong>USD</strong>.
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>SEDANG MENUNGGU KONFIRMASI ADMIN</span>
+            </div>
+            <h3 className="text-xl font-bold text-neutral-900">Pembayaran Telah Diajukan!</h3>
+            <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+              Bukti pembayaran setoran QRIS sebesar <strong>Rp {depositTicket.amountIdr.toLocaleString('id-ID')}</strong> telah diterima sistem. Admin keuangan sedang memverifikasi mutasi dan akan menyetujui penambahan saldo Anda (estimasi 1 - 5 menit).
             </p>
           </div>
 
           <div className="max-w-md mx-auto bg-neutral-50 p-5 rounded-2xl border border-neutral-200 text-xs space-y-3 text-left">
             <div className="flex justify-between py-1 border-b border-neutral-200">
               <span className="text-neutral-500">No. Referensi:</span>
-              <strong className="font-mono text-neutral-900">{successReceipt.ref}</strong>
+              <strong className="font-mono text-neutral-900">{depositTicket.ref}</strong>
             </div>
             <div className="flex justify-between py-1 border-b border-neutral-200">
               <span className="text-neutral-500">Metode Pembayaran:</span>
@@ -525,50 +532,47 @@ export const DepositPage: React.FC = () => {
             </div>
             <div className="flex justify-between py-1 border-b border-neutral-200">
               <span className="text-neutral-500">Akun Trading:</span>
-              <strong className="text-neutral-900 font-mono">#{successReceipt.accountNum}</strong>
+              <strong className="text-neutral-900 font-mono">#{depositTicket.accountNum}</strong>
             </div>
             <div className="flex justify-between py-1 border-b border-neutral-200">
-              <span className="text-neutral-500">Nominal Bayar (IDR):</span>
+              <span className="text-neutral-500">Nominal Transfer (IDR):</span>
               <strong className="text-neutral-900 font-mono text-sm">
-                Rp {successReceipt.amountIdr.toLocaleString('id-ID')}
+                Rp {depositTicket.amountIdr.toLocaleString('id-ID')}
               </strong>
             </div>
-            <div className="flex justify-between py-1.5 bg-emerald-50 px-3 rounded-lg border border-emerald-200">
-              <span className="text-emerald-800 font-medium">Kredit Saldo USD Masuk:</span>
-              <strong className="text-emerald-700 font-mono font-black text-sm">
-                +${successReceipt.amountUsd} USD
+            <div className="flex justify-between py-1.5 bg-amber-50/80 px-3 rounded-lg border border-amber-200">
+              <span className="text-amber-900 font-medium">Estimasi Saldo Masuk:</span>
+              <strong className="text-amber-800 font-mono font-black text-sm">
+                +${depositTicket.amountUsd} USD
               </strong>
             </div>
             <div className="flex justify-between py-1 text-[11px] text-neutral-500">
-              <span>Waktu Transaksi:</span>
-              <span>{successReceipt.date}</span>
+              <span>Waktu Pengajuan:</span>
+              <span>{depositTicket.date}</span>
             </div>
           </div>
 
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                setStep('input');
-                setSuccessReceipt(null);
-              }}
+              onClick={() => navigate('/dashboard/transactions')}
               className="py-2.5 px-5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
-              Deposit QRIS Lagi
+              Lihat Riwayat Transaksi
             </button>
             <button
               type="button"
               onClick={() => navigate('/dashboard/markets')}
               className="py-2.5 px-6 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-colors shadow cursor-pointer flex items-center gap-2"
             >
-              <span>Buka WebTrader</span>
+              <span>Buka WebTrader Terminal</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* POP UP PERINGATAN MINIMAL DEPOSIT 500RB */}
+      {/* POP UP PERINGATAN MINIMAL DEPOSIT 250RB */}
       {showMinDepositModal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
           <div className="w-full max-w-md bg-white rounded-2xl p-6 border border-neutral-200 shadow-2xl space-y-5 animate-scaleUp text-neutral-900 relative">
@@ -588,7 +592,7 @@ export const DepositPage: React.FC = () => {
                 Peringatan Minimal Deposit
               </h3>
               <p className="text-xs text-neutral-600 leading-relaxed px-2">
-                Nominal deposit minimal adalah <strong>Rp 500.000</strong>. Silakan masukkan nominal minimal Rp 500.000 untuk melanjutkan pembayaran via QRIS.
+                Nominal deposit minimal adalah <strong>Rp 250.000</strong>. Silakan masukkan nominal minimal Rp 250.000 untuk melanjutkan pembayaran via QRIS.
               </p>
             </div>
 
@@ -599,17 +603,17 @@ export const DepositPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span>Minimal yang dibutuhkan:</span>
-                <strong className="font-mono text-emerald-700">Rp 500.000 (+${(500000 / 16000).toFixed(2)} USD)</strong>
+                <strong className="font-mono text-emerald-700">Rp 250.000 (+${(250000 / 16000).toFixed(2)} USD)</strong>
               </div>
             </div>
 
             <div className="space-y-2 pt-1">
               <button
                 type="button"
-                onClick={handleSetExact500k}
+                onClick={handleSetExact250k}
                 className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Ubah ke Rp 500.000 & Lanjutkan</span>
+                <span>Ubah ke Rp 250.000 & Lanjutkan</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button

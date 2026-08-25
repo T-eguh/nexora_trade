@@ -27,7 +27,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ mobileOpen, onCloseM
 
   const adminNavItems = [
     { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
-    { to: '/admin/users', label: 'Users Management', icon: Users },
+    { to: '/admin/users', label: 'Users & Verifikasi KTP', icon: Users },
     { to: '/admin/accounts', label: 'Trading Accounts', icon: Wallet },
     { to: '/admin/markets', label: 'Markets & Instruments', icon: TrendingUp },
     { to: '/admin/transactions', label: 'Transactions', icon: Receipt },
