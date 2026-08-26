@@ -34,6 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
     { to: '/dashboard/transactions', label: 'Riwayat Transaksi', icon: Repeat },
     { to: '/dashboard/accounts', label: 'Dompet & Akun', icon: Wallet },
     { to: '/dashboard/markets', label: 'Nexora WebTrader', icon: LineChart },
+    { to: '/dashboard/security', label: 'Pengaturan & Ganti Sandi', icon: Settings },
+    { to: '/dashboard/profile', label: 'Profil Saya', icon: UserCheck },
     { to: '/dashboard/support', label: 'Bantuan & Tiket', icon: Users },
   ];
 

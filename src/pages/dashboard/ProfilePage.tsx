@@ -94,6 +94,24 @@ export const ProfilePage: React.FC = () => {
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
+
+          {/* Quick Password & Security Box */}
+          <div className="p-4 bg-[#14151b] border border-neutral-800 rounded-2xl space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-white font-bold">
+              <Shield className="w-4 h-4 text-amber-500" />
+              <span>Ganti Sandi & Keamanan</span>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Ubah kata sandi login dan aktifkan proteksi otentikasi dua langkah (2FA).
+            </p>
+            <Link
+              to="/dashboard/security"
+              className="w-full py-2.5 px-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all border border-neutral-700"
+            >
+              <span>Pengaturan Kata Sandi</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Update Form */}

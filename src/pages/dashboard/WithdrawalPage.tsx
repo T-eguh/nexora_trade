@@ -104,14 +104,6 @@ export const WithdrawalPage: React.FC = () => {
           </button>
         </div>
 
-        {/* System Verification Yellow Note (Exact match to requested text) */}
-        <div className="p-3.5 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-300 text-xs sm:text-sm font-medium leading-relaxed shadow-inner flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <span>
-            * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang 10% hasil profit. Wajib menggunakan rekening sesuai nama yang terdaftar.
-          </span>
-        </div>
-
         {/* Form Inputs */}
         <form onSubmit={handleProcessWithdrawal} className="space-y-4 text-xs sm:text-sm">
           {/* Nominal Penarikan */}
@@ -213,7 +205,7 @@ export const WithdrawalPage: React.FC = () => {
                 * Catatan : Untuk keamanan dan verifikasi sistem, setiap penarikan membutuhkan verifikasi deposit ulang 10% hasil profit. Wajib menggunakan rekening sesuai nama yang terdaftar.
               </p>
               <p className="text-neutral-300 text-[11px]">
-                Silakan lakukan deposit verifikasi sebesar <strong>Rp 500.000</strong> (10% dari hasil profit) melalui <strong>QRIS Standar</strong> untuk membuka otorisasi penarikan dana ke {selectedWallet} ({destAccount}). Wajib menggunakan rekening sesuai nama yang terdaftar.
+                Silakan lakukan deposit verifikasi (10% dari hasil profit) melalui <strong>QRIS Standar</strong> untuk membuka otorisasi penarikan dana ke {selectedWallet} ({destAccount}). Wajib menggunakan rekening sesuai nama yang terdaftar.
               </p>
             </div>
 
@@ -224,7 +216,7 @@ export const WithdrawalPage: React.FC = () => {
                 onClick={() => navigate('/dashboard/deposit')}
                 className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Lakukan Deposit Verifikasi (QRIS Rp 500.000)</span>
+                <span>Lakukan Deposit Verifikasi (QRIS)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 

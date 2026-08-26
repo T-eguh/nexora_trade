@@ -115,6 +115,7 @@ export const App: React.FC = () => {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="verification" element={<VerificationPage />} />
           <Route path="security" element={<SecurityPage />} />
+          <Route path="settings" element={<SecurityPage />} />
           <Route path="support" element={<SupportPage />} />
         </Route>
 
