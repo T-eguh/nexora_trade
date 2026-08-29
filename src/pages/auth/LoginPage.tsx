@@ -68,16 +68,10 @@ export const LoginPage: React.FC = () => {
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-neutral-100 px-2 py-1 rounded text-xs text-neutral-700 font-semibold border border-neutral-200">
-            <span className="text-base">🇮🇩</span>
-            <span className="hidden sm:inline">ID</span>
+          <div className="flex items-center gap-1.5 bg-neutral-100 px-2.5 py-1 rounded-md text-xs text-neutral-700 font-semibold border border-neutral-200">
+            <span>🇮🇩</span>
+            <span className="text-[11px] font-bold">ID / IDR</span>
           </div>
-          <Link
-            to="/admin/login"
-            className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 hover:text-red-600 transition-colors"
-          >
-            Admin Portal
-          </Link>
         </div>
       </header>
 

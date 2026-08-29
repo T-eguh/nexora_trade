@@ -86,14 +86,14 @@ export const App: React.FC = () => {
           <Route path="/aml" element={<AmlPage />} />
           <Route path="/cookies" element={<CookiesPage />} />
 
-          {/* Auth Pages within Public Layout */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-
           {/* 404 Fallback */}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
+
+        {/* Dedicated Standalone Client & Admin Auth Pages */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
 
         {/* Client Dashboard Routes (Protected) */}
         <Route

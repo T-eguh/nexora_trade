@@ -51,16 +51,10 @@ export const AdminLoginPage: React.FC = () => {
         </Link>
 
         <div className="flex items-center gap-4 text-xs">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-neutral-400 font-mono text-[11px]">
+          <span className="inline-flex items-center gap-1.5 text-neutral-400 font-mono text-[11px]">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Security Gateway: Active
           </span>
-          <Link
-            to="/login"
-            className="text-neutral-400 hover:text-white transition-colors text-xs font-semibold"
-          >
-            Client Portal →
-          </Link>
         </div>
       </header>
 
