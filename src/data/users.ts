@@ -9,6 +9,7 @@ export const INITIAL_USERS: User[] = [
     country: 'United States',
     role: 'user',
     status: 'active',
+    password: 'demo123',
     createdAt: '2025-01-15T08:30:00Z',
   },
   {
@@ -19,6 +20,7 @@ export const INITIAL_USERS: User[] = [
     country: 'United Kingdom',
     role: 'admin',
     status: 'active',
+    password: 'admin123',
     createdAt: '2024-11-01T00:00:00Z',
   },
   {
@@ -29,6 +31,7 @@ export const INITIAL_USERS: User[] = [
     country: 'United Kingdom',
     role: 'user',
     status: 'active',
+    password: 'password123',
     createdAt: '2025-02-10T14:20:00Z',
   },
   {
@@ -39,6 +42,7 @@ export const INITIAL_USERS: User[] = [
     country: 'Germany',
     role: 'user',
     status: 'suspended',
+    password: 'password123',
     createdAt: '2025-02-18T10:15:00Z',
   },
 ];

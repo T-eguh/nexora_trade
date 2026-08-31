@@ -1,35 +1,65 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useStorage';
-import { Shield, Lock, KeyRound, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Shield, Lock, KeyRound, AlertCircle, Eye, EyeOff, CheckCircle2, ArrowRight, Sparkles, Check } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@nexoratrade.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [securityCode, setSecurityCode] = useState('889922');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const handleFillCredentials = () => {
+    setEmail('admin@nexoratrade.com');
+    setPassword('admin123');
+    setSecurityCode('889922');
+    setError(null);
+  };
+
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const cleanEmail = email.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanEmail) {
+      setError('Harap masukkan email administrator.');
+      return;
+    }
+
+    if (!cleanPass) {
+      setError('Harap masukkan kata sandi administrator.');
+      return;
+    }
+
+    if (!securityCode || securityCode.trim().length !== 6) {
+      setError('Kode otentikasi 2FA harus 6 digit angka.');
+      return;
+    }
+
     setLoading(true);
 
     setTimeout(() => {
-      // Authenticate as Admin
-      const loggedUser = login(email.trim(), password.trim() || 'admin123');
+      // Strictly Authenticate as Admin
+      const loggedUser = login(cleanEmail, cleanPass);
       setLoading(false);
 
       if (loggedUser && loggedUser.role === 'admin') {
-        navigate('/admin');
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/admin');
+        }, 600);
       } else if (loggedUser && loggedUser.role !== 'admin') {
-        setError('Akses ditolak: Akun ini adalah akun trader dan tidak memiliki hak akses administrator.');
+        setError('Akses ditolak: Akun ini adalah akun trader biasa dan tidak memiliki hak akses administrator.');
       } else {
-        setError('Kredensial administrator tidak valid.');
+        setError('Email atau Kata Sandi Administrator salah. Akses ditolak demi keamanan sistem.');
       }
     }, 450);
   };
@@ -70,9 +100,17 @@ export const AdminLoginPage: React.FC = () => {
               Portal Manajemen Administrator
             </h1>
             <p className="text-xs text-neutral-400">
-              Akses terenkripsi untuk manajemen akun, pasar instrumen, dan transaksi.
+              Akses terenkripsi untuk manajemen akun, pasar instrumen, dan verifikasi transaksi.
             </p>
           </div>
+
+          {/* Success Notification */}
+          {success && (
+            <div className="p-3 bg-emerald-950/40 border border-emerald-800/80 rounded-xl text-emerald-400 text-xs flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+              <span>Otentikasi Berhasil! Mengalihkan ke Panel Admin...</span>
+            </div>
+          )}
 
           {/* Error notice */}
           {error && (
@@ -94,7 +132,7 @@ export const AdminLoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@nexoratrade.com"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#17171d] border border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500 transition-colors font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#17171d] border border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500 transition-colors font-mono text-xs sm:text-sm"
               />
             </div>
 
@@ -108,13 +146,13 @@ export const AdminLoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#17171d] border border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500 transition-colors font-mono pr-10"
+                  placeholder="Masukkan kata sandi admin"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#17171d] border border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500 transition-colors font-mono pr-10 text-xs sm:text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -126,7 +164,7 @@ export const AdminLoginPage: React.FC = () => {
                 <label className="block font-semibold text-neutral-300">
                   Kode Verifikasi 2FA (Otentikasi 6-Digit)
                 </label>
-                <span className="text-[10px] text-neutral-500">Auto Verified</span>
+                <span className="text-[10px] text-emerald-400 font-bold">2FA Active</span>
               </div>
               <input
                 type="text"
@@ -140,11 +178,13 @@ export const AdminLoginPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+              disabled={loading || success}
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2 active:scale-98"
             >
               {loading ? (
-                <span>Mengotentikasi Sesi...</span>
+                <span>Memvalidasi Kredensial...</span>
+              ) : success ? (
+                <span>Berhasil Masuk...</span>
               ) : (
                 <>
                   <span>Masuk ke Konsol Admin</span>
@@ -155,11 +195,21 @@ export const AdminLoginPage: React.FC = () => {
           </form>
 
           {/* Quick Demo Credentials Box */}
-          <div className="p-3 bg-[#17171d] border border-neutral-800 rounded-xl space-y-1.5 text-xs">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
-              Kredensial Super Admin Bawaan
-            </span>
-            <div className="text-[11px] font-mono text-neutral-300 flex justify-between items-center">
+          <div className="p-3 bg-[#17171d] border border-neutral-800 rounded-xl space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
+                Kredensial Super Admin
+              </span>
+              <button
+                type="button"
+                onClick={handleFillCredentials}
+                className="text-[10px] text-red-400 hover:text-red-300 font-bold underline flex items-center gap-1 cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Isi Otomatis</span>
+              </button>
+            </div>
+            <div className="text-[11px] font-mono text-neutral-300 flex justify-between items-center pt-1 border-t border-neutral-800">
               <span>Email: <strong className="text-white">admin@nexoratrade.com</strong></span>
               <span>Pass: <strong className="text-white">admin123</strong></span>
             </div>

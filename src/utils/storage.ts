@@ -81,47 +81,52 @@ export const StorageService = {
   },
 
   login(emailOrPhone: string, password?: string): User | null {
+    if (!emailOrPhone || !password) {
+      return null;
+    }
+
     const cleanInput = emailOrPhone.trim().toLowerCase();
+    const cleanPass = password.trim();
+
+    if (!cleanPass) {
+      return null;
+    }
+
     const users = this.getUsers();
 
-    // Admin account
-    if ((cleanInput === 'admin@nexoratrade.com' || cleanInput === 'admin') && (!password || password === 'admin123')) {
-      const adminUser = users.find((u) => u.email.toLowerCase() === 'admin@nexoratrade.com') || INITIAL_USERS[1];
-      this.setCurrentUser(adminUser);
-      return adminUser;
+    // 1. Admin login verification
+    if (cleanInput === 'admin@nexoratrade.com' || cleanInput === 'admin') {
+      const adminUser = users.find(
+        (u) => u.email.toLowerCase() === 'admin@nexoratrade.com' || u.role === 'admin'
+      ) || INITIAL_USERS[1];
+
+      const expectedAdminPass = adminUser.password || 'admin123';
+      if (cleanPass === expectedAdminPass) {
+        this.setCurrentUser(adminUser);
+        return adminUser;
+      }
+      // Wrong admin password
+      return null;
     }
 
-    // Trader demo account
-    if ((cleanInput === 'demo@nexoratrade.com' || cleanInput === 'demo' || cleanInput.includes('ismail')) && (!password || password === 'demo123')) {
-      const demoUser = users.find((u) => u.email.toLowerCase() === 'demo@nexoratrade.com') || INITIAL_USERS[0];
-      this.setCurrentUser(demoUser);
-      return demoUser;
-    }
-
-    // User lookup by email or phone
-    const matchedUser = users.find(
-      (u) => u.email.toLowerCase() === cleanInput || (u.phone && u.phone.includes(cleanInput))
-    );
+    // 2. Client / Trader account verification
+    const matchedUser = users.find((u) => {
+      const emailMatch = u.email.toLowerCase() === cleanInput;
+      const phoneClean = (u.phone || '').replace(/[^0-9]/g, '');
+      const inputClean = cleanInput.replace(/[^0-9]/g, '');
+      const phoneMatch = inputClean.length >= 6 && phoneClean.includes(inputClean);
+      const demoMatch = (cleanInput === 'demo' || cleanInput.includes('ismail')) && u.email.toLowerCase() === 'demo@nexoratrade.com';
+      return emailMatch || phoneMatch || demoMatch;
+    });
 
     if (matchedUser) {
-      if (password && matchedUser.password && matchedUser.password !== password && password !== 'demo123') {
-        return null;
+      const expectedUserPass = matchedUser.password || (matchedUser.email.toLowerCase() === 'demo@nexoratrade.com' ? 'demo123' : 'password123');
+      if (cleanPass === expectedUserPass) {
+        this.setCurrentUser(matchedUser);
+        return matchedUser;
       }
-      this.setCurrentUser(matchedUser);
-      return matchedUser;
-    }
-
-    // If not found but valid looking email/phone, auto register as active client for smooth testing
-    if (cleanInput.length >= 3) {
-      const isEmail = cleanInput.includes('@');
-      const newUser = this.register({
-        name: cleanInput.split('@')[0],
-        email: isEmail ? cleanInput : `${cleanInput}@nexoratrade.com`,
-        phone: !isEmail ? cleanInput : '+6281298421109',
-        country: 'Indonesia',
-        password: password || 'demo123',
-      });
-      return newUser;
+      // Password does not match
+      return null;
     }
 
     return null;
